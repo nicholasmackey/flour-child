@@ -1,0 +1,69 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import GalleryGrid from '../components/GalleryGrid.astro';
+import OrderCta from '../components/OrderCta.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { buildGalleryItems } from '../lib/gallery';
+import { getGalleryPhotos, getSiteSettings } from '../sanity/queries';
+
+import kitchenPortrait from '../assets/images/story/hailey-kitchen-portrait.webp';
+import whiskingPortrait from '../assets/images/story/hailey-whisking.webp';
+
+const [settings, photos] = await Promise.all([getSiteSettings(), getGalleryPhotos()]);
+
+const items = buildGalleryItems(
+  photos,
+  [
+    {
+      key:     'hailey-whisking',
+      image:   whiskingPortrait,
+      alt:     'Hailey standing in her pink kitchen holding a whisk and a mixing bowl',
+      caption: 'The kitchen in Forney where everything gets made.'
+    },
+    {
+      key:     'hailey-kitchen-portrait',
+      image:   kitchenPortrait,
+      alt:     'Hailey at her kitchen counter behind trays of scones, cookies and cinnamon rolls',
+      caption: 'A bake day, mid morning.'
+    }
+  ],
+  ['Cinnamon rolls', 'Sandwich bread', 'Kolache', 'Cookies', 'Muffins and scones', 'Market shelf']
+);
+
+const hasPublishedPhotos = photos.length > 0;
+---
+
+<BaseLayout
+  title={`Gallery | ${settings.businessName}`}
+  description="Photos from the Flour Child kitchen in Forney, Texas: gluten-free bread, cinnamon rolls, cookies, scones and kolache."
+>
+  <section class="canvas gutter-x pt-8 pb-16 md:pb-20">
+    <p class="label text-pink-deep">Gallery</p>
+    <div class="mt-8 grid gap-8 lg:grid-cols-12 lg:items-baseline">
+      <h1 class="text-display lg:col-span-7">From the kitchen</h1>
+      <p class="max-w-sm text-lead text-plum/75 lg:col-span-4 lg:col-start-9">
+        {
+          hasPublishedPhotos
+            ? 'Bake days, market deliveries and whatever came out of the oven that morning.'
+            : 'A few photos from the kitchen, with more on the way.'
+        }
+      </p>
+    </div>
+  </section>
+
+  <section class="canvas gutter-x pb-24 md:pb-32">
+    <GalleryGrid items={items} />
+  </section>
+
+  <OrderCta
+    heading="Hungry yet?"
+    body="Everything available this week is on Bakesy, along with current pricing."
+    label="Order Online"
+    href={settings.orderUrl}
+    secondaryHref="/menu"
+    secondaryLabel="See the Menu"
+  />
+</BaseLayout>

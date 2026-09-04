@@ -1,0 +1,47 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import type { FeaturedProduct } from '../sanity/types';
+
+import SmartImage from './SmartImage.astro';
+
+interface Props {
+  product: FeaturedProduct;
+  orderUrl: string;
+  aspectRatio?: string;
+}
+
+const { product, orderUrl, aspectRatio = '4 / 5' } = Astro.props;
+
+const href = product.orderUrl ?? orderUrl;
+---
+
+<article class="group">
+  <a href={href} target="_blank" rel="noopener noreferrer" class="relative block overflow-hidden"
+     style={`aspect-ratio: ${aspectRatio}`}>
+    <SmartImage
+      image={product.image}
+      alt={product.name}
+      widths={[400, 640, 900]}
+      sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+      class="h-full w-full object-cover transition-transform duration-700 ease-out
+             group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+      frameLabel={product.name}
+    />
+    {
+      product.badge && (
+        <span class="label absolute top-4 left-4 bg-cream px-3 py-2 text-plum">{product.badge}</span>
+      )
+    }
+    <span class="sr-only">Order {product.name} on Bakesy (opens in a new tab)</span>
+  </a>
+
+  <div class="mt-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+    <h3 class="text-title">{product.name}</h3>
+    {product.priceDisplay && <p class="font-bold text-pink-deep">{product.priceDisplay}</p>}
+  </div>
+  {product.categoryName && <p class="label mt-2 text-plum/70">{product.categoryName}</p>}
+  {product.description && <p class="mt-2 max-w-sm text-plum/70">{product.description}</p>}
+</article>

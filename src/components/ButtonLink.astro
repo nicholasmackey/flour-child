@@ -1,0 +1,43 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+interface Props {
+  href: string;
+  variant?: 'solid' | 'outline' | 'onDark' | 'text';
+  class?: string;
+}
+
+const { href, variant = 'solid', class: className = '' } = Astro.props;
+
+const isExternal = /^https?:\/\//.test(href);
+
+/*
+ * There is one button size on the site and `.btn` holds it, so a variant only
+ * picks the colour it wears. `text` is not a button at all: it is the quiet
+ * link that sits beside one.
+ */
+const shapes = {
+  solid:   'btn',
+  outline: 'btn border border-plum',
+  onDark:  'btn',
+  text:    'quiet-link inline-block'
+};
+
+const variants = {
+  solid:   'bg-pink text-ink hover:bg-plum hover:text-cream',
+  outline: 'text-plum hover:bg-plum hover:text-cream',
+  onDark:  'bg-cream text-plum hover:bg-buttercream',
+  text:    ''
+};
+---
+
+<a
+  href={href}
+  class:list={['label', shapes[variant], variants[variant], className]}
+  {...isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {}}
+>
+  <slot />
+  {isExternal && <span class="sr-only">(opens in a new tab)</span>}
+</a>

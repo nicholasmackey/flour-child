@@ -1,0 +1,89 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import AnnouncementBar from '../components/AnnouncementBar.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Seo from '../components/Seo.astro';
+import { getActiveAnnouncement, getSiteSettings } from '../sanity/queries';
+
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  structuredData?: Record<string, unknown> | null;
+  noindex?: boolean;
+  /** Pages that open on plum ask for the dark header. */
+  headerTheme?: 'light' | 'dark';
+}
+
+const {
+  title,
+  description,
+  structuredData = null,
+  noindex = false,
+  headerTheme = 'light'
+} = Astro.props;
+
+const [settings, announcement] = await Promise.all([getSiteSettings(), getActiveAnnouncement()]);
+const pathname = Astro.url.pathname;
+
+/*
+ * The two faces used above the fold get a preload. This reads whatever the font
+ * pipeline produced, so swapping the source files out does not break the build.
+ */
+const fontFiles = import.meta.glob<string>('../assets/fonts/web/*.woff2', {
+  eager:  true,
+  query:  '?url',
+  import: 'default'
+});
+
+const preloadFonts = ['hamburg-hand-bold', 'acumin-pro-regular']
+  .map((name) => Object.entries(fontFiles).find(([file]) => file.includes(name))?.[1])
+  .filter((url): url is string => Boolean(url));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#fff9f3" />
+
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    {preloadFonts.map((url) => <link rel="preload" href={url} as="font" type="font/woff2" crossorigin />)}
+
+    <Seo title={title} description={description} structuredData={structuredData} noindex={noindex} />
+  </head>
+
+  <body class="flex min-h-screen flex-col">
+    <a
+      href="#main"
+      class="label sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50
+             focus:rounded-[2px] focus:bg-plum focus:px-5 focus:py-3 focus:text-cream"
+    >
+      Skip to content
+    </a>
+
+    {announcement && <AnnouncementBar announcement={announcement} />}
+
+    <Header
+      orderUrl={settings.orderUrl}
+      locationLabel={settings.locationLabel}
+      pathname={pathname}
+      theme={headerTheme}
+    />
+
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+
+    <Footer settings={settings} />
+  </body>
+</html>

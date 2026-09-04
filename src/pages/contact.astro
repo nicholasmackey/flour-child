@@ -1,0 +1,126 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import ButtonLink from '../components/ButtonLink.astro';
+import SmartImage from '../components/SmartImage.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLocations, getSiteSettings } from '../sanity/queries';
+
+import kitchenPortrait from '../assets/images/story/hailey-kitchen-portrait.webp';
+
+const [settings, locations] = await Promise.all([getSiteSettings(), getLocations()]);
+
+const porch = locations.find((location) => location.locationType === 'porch');
+const storeCount = locations.filter((location) => location.locationType !== 'porch').length;
+
+const socials = [
+  { href: settings.instagramUrl, label: 'Instagram' },
+  { href: settings.facebookUrl, label: 'Facebook' }
+].filter((social): social is { href: string; label: string } => Boolean(social.href));
+
+const orderingDetails = [
+  { term: 'Order minimum', value: `$${settings.orderMinimum}` },
+  { term: 'Typical deposit', value: `${settings.depositPercent}%` },
+  { term: 'Typical lead time', value: `${settings.typicalLeadTimeDays} days` }
+];
+---
+
+<BaseLayout
+  title={`Contact | ${settings.businessName}`}
+  description="How to order from Flour Child NTX, a gluten-free bakery in Forney, Texas, and where to pick up around North Texas."
+>
+  <section class="canvas">
+    <div class="grid lg:grid-cols-12">
+      <div class="gutter-x order-2 flex flex-col justify-end pt-10 pb-4 lg:order-1 lg:col-span-7 lg:pb-16">
+        <p class="label text-pink-deep">Contact</p>
+        <h1 class="mt-8 text-display">Getting in touch</h1>
+        <p class="mt-8 max-w-md text-lead text-plum/75">
+          Orders, current availability and pricing all live on Bakesy, so that is the fastest way to reach
+          Flour Child.
+        </p>
+        <div class="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
+          <ButtonLink href={settings.orderUrl} variant="solid">Order Online</ButtonLink>
+          <ButtonLink href="/find-us" variant="text">Find a pickup location</ButtonLink>
+        </div>
+      </div>
+
+      <div class="order-1 aspect-[3/2] lg:order-2 lg:col-span-4 lg:col-start-9 lg:aspect-[3/4]">
+        <SmartImage
+          fallback={kitchenPortrait}
+          alt="Hailey at her kitchen counter behind trays of scones, cookies and cinnamon rolls"
+          widths={[480, 720, 1080]}
+          sizes="(min-width: 1024px) 34vw, 100vw"
+          loading="eager"
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="canvas gutter-x py-24 md:py-32">
+    <div class="grid gap-14 lg:grid-cols-12 lg:gap-8">
+      <div class="rule pt-6 lg:col-span-5">
+        <h2 class="label text-plum/70">Where to pick up</h2>
+        {
+          porch && (
+            <p class="mt-5 text-lead text-plum/80">
+              {porch.name} is in {porch.approximateArea ?? settings.locationLabel}. {porch.publicAddressNote}
+            </p>
+          )
+        }
+        {
+          storeCount > 0 && (
+            <p class="mt-4 text-plum/70">
+              Flour Child is also on the shelf at local shops around North Texas during the week.
+            </p>
+          )
+        }
+        <p class="mt-6">
+          <a href="/find-us" class="quiet-link label text-pink-deep">Every pickup spot</a>
+        </p>
+      </div>
+
+      <div class="rule pt-6 lg:col-span-5 lg:col-start-8">
+        <h2 class="label text-plum/70">Ordering basics</h2>
+        <dl class="mt-5">
+          {
+            orderingDetails.map((detail) => (
+              <div class="flex items-baseline justify-between gap-6 border-b border-plum/10 py-3">
+                <dt class="text-plum/70">{detail.term}</dt>
+                <dd class="font-bold">{detail.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <p class="mt-6 text-plum/70">
+          Custom orders and questions about a specific week go through Bakesy at checkout.
+        </p>
+
+        {
+          socials.length > 0 && (
+            <div class="mt-8">
+              <h3 class="label text-plum/70">Follow along</h3>
+              <ul class="mt-3 flex gap-6">
+                {socials.map((social) => (
+                  <li>
+                    <a
+                      href={social.href}
+                      class="quiet-link label text-pink-deep"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {social.label}
+                      <span class="sr-only">(opens in a new tab)</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>

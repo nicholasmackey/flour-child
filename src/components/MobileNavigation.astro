@@ -1,0 +1,111 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import { NAV_LINKS, isCurrent } from '../lib/navigation';
+
+import Logo from './Logo.astro';
+
+interface Props {
+  orderUrl: string;
+  locationLabel: string;
+  pathname: string;
+  /** Matches the header it sits in. The panel itself is always on plum. */
+  theme?: 'light' | 'dark';
+}
+
+const { orderUrl, locationLabel, pathname, theme = 'light' } = Astro.props;
+---
+
+<button
+  type="button"
+  id="mobile-nav-toggle"
+  class:list={['label lg:hidden', theme === 'dark' ? 'text-cream' : 'text-plum']}
+  aria-expanded="false"
+  aria-controls="mobile-nav"
+>
+  Menu
+</button>
+
+<div id="mobile-nav" class="on-dark fixed inset-0 z-50 flex flex-col bg-plum lg:hidden" hidden>
+  <div class="gutter-x flex items-center justify-between py-6">
+    <a href="/" data-mobile-nav-link aria-label="Flour Child NTX home">
+      <Logo variant="wordmark" color="white" alt="Flour Child NTX" class="w-28" />
+    </a>
+    <button type="button" id="mobile-nav-close" class="label text-cream">Close</button>
+  </div>
+
+  <nav aria-label="Main" class="gutter-x flex flex-1 flex-col justify-center pb-16">
+    <ul>
+      {
+        NAV_LINKS.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              data-mobile-nav-link
+              aria-current={isCurrent(pathname, link.href) ? 'page' : undefined}
+              class:list={[
+                'display block py-3 text-headline',
+                isCurrent(pathname, link.href) ? 'text-buttercream' : 'text-cream'
+              ]}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="rule mt-10 flex flex-col gap-5 pt-8">
+      <a
+        href={orderUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn label w-fit bg-cream text-plum hover:bg-buttercream"
+      >
+        Order Online
+        <span class="sr-only">(opens in a new tab)</span>
+      </a>
+      <p class="label text-cream/60">{locationLabel}</p>
+    </div>
+  </nav>
+</div>
+
+<script>
+  const toggle = document.getElementById('mobile-nav-toggle');
+  const panel = document.getElementById('mobile-nav');
+  const close = document.getElementById('mobile-nav-close');
+
+  if (toggle && panel && close) {
+    const links = panel.querySelectorAll<HTMLAnchorElement>('[data-mobile-nav-link]');
+
+    const setOpen = (open: boolean) => {
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      document.documentElement.style.overflow = open ? 'hidden' : '';
+      if (open) {
+        (links[0] ?? close).focus();
+      } else {
+        toggle.focus();
+      }
+    };
+
+    toggle.addEventListener('click', () => setOpen(panel.hidden === true));
+    close.addEventListener('click', () => setOpen(false));
+    links.forEach((link) => link.addEventListener('click', () => setOpen(false)));
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !panel.hidden) {
+        setOpen(false);
+      }
+    });
+
+    // A phone rotated into a wide layout should not be left with a stuck overlay.
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', (event) => {
+      if (event.matches && !panel.hidden) {
+        setOpen(false);
+      }
+    });
+  }
+</script>

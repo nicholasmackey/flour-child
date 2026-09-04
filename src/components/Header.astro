@@ -1,0 +1,308 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import { HEADER_LEFT_LINKS, HEADER_RIGHT_LINKS, isCurrent } from '../lib/navigation';
+
+import Logo from './Logo.astro';
+import MobileNavigation from './MobileNavigation.astro';
+
+interface Props {
+  orderUrl: string;
+  locationLabel: string;
+  pathname: string;
+  /** `dark` sits the header on the plum hero, `light` on the cream pages. */
+  theme?: 'light' | 'dark';
+}
+
+const { orderUrl, locationLabel, pathname, theme = 'light' } = Astro.props;
+
+const onPlum = theme === 'dark';
+
+/*
+ * Order Online is the site's button everywhere but the top of the home page,
+ * where it rests as one more link and fills into the button as the page moves.
+ */
+const restsAsLink = isCurrent(pathname, '/');
+
+/* Both link groups sit on the same rhythm, so they share one set of classes. */
+const cell = 'nav-cell flex items-center';
+
+/*
+ * Link colour is not set here: the header keeps one set of custom properties
+ * per theme and shifts them on scroll, so every link moves together.
+ */
+const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href) && 'is-current'];
+---
+
+<!--
+  The header stays in view: it is pinned to the top of the viewport and the page
+  scrolls beneath it. At rest it still reads as part of the page rather than a
+  bar on top of it, so the edge only appears once something is passing under it.
+  The row is a three column grid, so the logo is centred on the viewport rather
+  than on whatever width the two link groups happen to take up.
+-->
+<header
+  data-site-header
+  class:list={['site-header sticky top-0 z-30', onPlum && 'on-dark', !restsAsLink && 'cta-filled']}
+>
+  <nav
+    aria-label="Main"
+    class="nav-row canvas gutter-x grid grid-cols-[1fr_auto_1fr] items-center py-6 md:py-7"
+  >
+    <div class:list={[cell, 'justify-self-start lg:justify-self-end']}>
+      <ul class:list={[cell, 'hidden lg:flex']}>
+        {
+          HEADER_LEFT_LINKS.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={isCurrent(pathname, item.href) ? 'page' : undefined}
+                class:list={linkClass(item.href)}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <MobileNavigation
+        orderUrl={orderUrl}
+        locationLabel={locationLabel}
+        pathname={pathname}
+        theme={theme}
+      />
+    </div>
+
+    <a href="/" class="justify-self-center" aria-label="Flour Child NTX home">
+      <Logo variant="wordmark" color={onPlum ? 'white' : 'plum'} alt="Flour Child NTX" class="site-logo" />
+    </a>
+
+    <div class:list={[cell, 'justify-self-end lg:justify-self-start']}>
+      <ul class:list={[cell, 'hidden lg:flex']}>
+        {
+          HEADER_RIGHT_LINKS.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={isCurrent(pathname, item.href) ? 'page' : undefined}
+                class:list={linkClass(item.href)}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <a
+        href={orderUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="nav-cta label hidden lg:inline-flex"
+      >
+        Order Online
+        <span class="sr-only">(opens in a new tab)</span>
+      </a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  /*
+   * One set of properties per theme, shifted as a group once the page moves.
+   * Resting, the bar matches the ground it sits on and reads as part of the
+   * page; scrolled, it deepens a shade and the links firm up, which is enough
+   * to separate it from whatever is passing underneath without a border.
+   */
+  .site-header {
+    --nav-bg: var(--color-cream);
+    --nav-fg: color-mix(in srgb, var(--color-plum) 70%, transparent);
+    --nav-accent: var(--color-pink-deep);
+    --logo-rest: 8rem;
+    --logo-scale: 1;
+    /*
+     * The CTA's resting state: no box at all, so it sits on the same rhythm as
+     * the links either side of it and reads as one of them.
+     */
+    --cta-bg: transparent;
+    --cta-fg: var(--nav-fg);
+    --cta-bg-hover: transparent;
+    --cta-fg-hover: var(--nav-accent);
+    --cta-px: 0;
+    --cta-py: 0;
+
+    background-color: var(--nav-bg);
+    transition: background-color 600ms ease;
+  }
+
+  .site-header.on-dark {
+    --nav-bg: var(--color-plum);
+    --nav-fg: color-mix(in srgb, var(--color-cream) 75%, transparent);
+    --nav-accent: var(--color-pink-soft);
+  }
+
+  .site-header.is-scrolled {
+    --nav-bg: var(--color-cream-deep);
+    --nav-fg: color-mix(in srgb, var(--color-plum) 92%, transparent);
+    /* Two fifths off the resting width. */
+    --logo-scale: 0.6;
+  }
+
+  .site-header.on-dark.is-scrolled {
+    --nav-bg: var(--color-plum-deep);
+    --nav-fg: color-mix(in srgb, var(--color-cream) 95%, transparent);
+  }
+
+  /*
+   * Filled: the site's button, at the site's one button size. Pages that are
+   * not the home page start here; the home page arrives here on scroll.
+   */
+  .site-header.cta-filled,
+  .site-header.is-scrolled {
+    --cta-bg: var(--color-pink);
+    --cta-fg: var(--color-ink);
+    --cta-bg-hover: var(--color-plum);
+    --cta-fg-hover: var(--color-cream);
+    --cta-px: var(--btn-px);
+    --cta-py: var(--btn-py);
+  }
+
+  .site-header.on-dark.cta-filled,
+  .site-header.on-dark.is-scrolled {
+    --cta-bg: var(--color-cream);
+    --cta-fg: var(--color-plum);
+    --cta-bg-hover: var(--color-buttercream);
+    --cta-fg-hover: var(--color-plum);
+  }
+
+  .nav-link {
+    color: var(--nav-fg);
+    transition: color 200ms ease;
+  }
+
+  .nav-link:hover,
+  .nav-link.is-current {
+    color: var(--nav-accent);
+  }
+
+  /*
+   * The box grows on the logo's curve and the colour comes up over the same
+   * span as the bar's, so the link becomes a button as one movement with the
+   * rest of the header rather than as a separate event.
+   */
+  .nav-cta {
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    padding: var(--cta-py) var(--cta-px);
+    background-color: var(--cta-bg);
+    color: var(--cta-fg);
+    transition:
+      padding 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 600ms ease,
+      color 600ms ease;
+  }
+
+  /* A hand on it should not wait out the scroll timing. */
+  .nav-cta:hover {
+    background-color: var(--cta-bg-hover);
+    color: var(--cta-fg-hover);
+    transition-duration: 200ms;
+  }
+
+  /*
+   * The logo is rendered by another component, so it is reached globally. It
+   * takes its width from the header and eases down rather than snapping, which
+   * is what carries the change: the bar shortens with it.
+   */
+  .site-header :global(.site-logo) {
+    width: calc(var(--logo-rest) * var(--logo-scale));
+    transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /*
+   * One gap value runs the whole row, so the six links keep an even rhythm and
+   * the two groups sit close to the logo rather than pinned to the far edges.
+   */
+  .nav-row {
+    --nav-gap: clamp(1.25rem, 3.4vw, 2.75rem);
+    gap: var(--nav-gap);
+  }
+
+  .nav-cell {
+    gap: var(--nav-gap);
+  }
+
+  @media (min-width: 640px) {
+    .site-header {
+      --logo-rest: 9rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .site-header {
+      --logo-rest: 10rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .site-header {
+      --logo-rest: 11rem;
+    }
+
+    .nav-row {
+      --nav-gap: clamp(2.25rem, 4.8vw, 5rem);
+    }
+  }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+
+  if (header) {
+    /* Anchor targets offset themselves by whatever the bar currently measures. */
+    const publishHeight = () =>
+      document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+
+    publishHeight();
+    new ResizeObserver(publishHeight).observe(header);
+
+    /*
+     * Two thresholds rather than one. The bar loses height when it changes, so
+     * a single line would sit under the reader's scroll and flip back and
+     * forth; entering well below where it leaves settles it in one move.
+     */
+    const ENTER = 96;
+    const LEAVE = 40;
+
+    let scrolled = false;
+    let queued = false;
+
+    const sync = () => {
+      queued = false;
+      const next = window.scrollY > (scrolled ? LEAVE : ENTER);
+
+      if (next !== scrolled) {
+        scrolled = next;
+        header.classList.toggle('is-scrolled', next);
+      }
+    };
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!queued) {
+          queued = true;
+          requestAnimationFrame(sync);
+        }
+      },
+      { passive: true }
+    );
+
+    /* A reload part way down the page should start in the scrolled state. */
+    sync();
+  }
+</script>

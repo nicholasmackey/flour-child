@@ -1,0 +1,42 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import type { Location } from '../sanity/types';
+
+import LocationEntry from './LocationEntry.astro';
+
+interface Props {
+  locations: Location[];
+}
+
+const { locations } = Astro.props;
+
+// Porch Pickup has its own place at the top of the page, so it never repeats here.
+const stores = locations.filter((location) => location.locationType !== 'porch');
+---
+
+{
+  stores.length > 0 && (
+    <ul class="shelf-list">
+      {stores.map((location) => (
+        <li>
+          <LocationEntry location={location} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  /* A single centred column. The space between shops is the only separator. */
+  .shelf-list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3.5rem, 7.5vw, 6.5rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+</style>

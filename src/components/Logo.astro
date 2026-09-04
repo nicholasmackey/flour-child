@@ -1,0 +1,37 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+interface Props {
+  /** `primary` is the full lockup with BAKED GOODS, `wordmark` is the script alone. */
+  variant?: 'primary' | 'wordmark';
+  /** Pick the file that contrasts with whatever is behind it. */
+  color?: 'plum' | 'dark' | 'white';
+  alt?: string;
+  class?: string;
+}
+
+const { variant = 'wordmark', color = 'plum', alt = 'Flour Child', class: className = '' } = Astro.props;
+
+const files = {
+  'primary-plum':    { src: '/brand/flour-child-primary-plum.svg', width: 957, height: 658 },
+  'primary-dark':    { src: '/brand/flour-child-primary.svg', width: 957, height: 658 },
+  'primary-white':   { src: '/brand/flour-child-primary-white.svg', width: 957, height: 658 },
+  'wordmark-plum':   { src: '/brand/flour-child-wordmark-plum.svg', width: 934, height: 657 },
+  'wordmark-dark':   { src: '/brand/flour-child-wordmark.svg', width: 934, height: 657 },
+  'wordmark-white':  { src: '/brand/flour-child-wordmark-white.svg', width: 934, height: 657 }
+} as const;
+
+const logo = files[`${variant}-${color}` as keyof typeof files];
+---
+
+<img
+  src={logo.src}
+  width={logo.width}
+  height={logo.height}
+  alt={alt}
+  class={className}
+  loading="eager"
+  decoding="async"
+/>

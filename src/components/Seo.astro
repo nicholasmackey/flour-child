@@ -1,0 +1,52 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+interface Props {
+  title: string;
+  description: string;
+  /** Absolute or site-relative path to the sharing image. */
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  structuredData?: Record<string, unknown> | null;
+  /** Keeps utility pages such as the 404 out of search results. */
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description,
+  ogImage = '/brand/flour-child-share.png',
+  ogType = 'website',
+  structuredData,
+  noindex = false
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname.replace(/\/+$/, '') || '/', Astro.site);
+const shareImage = new URL(ogImage, Astro.site);
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical.href} />
+{noindex && <meta name="robots" content="noindex, follow" />}
+
+<meta property="og:type" content={ogType} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical.href} />
+<meta property="og:image" content={shareImage.href} />
+<meta property="og:site_name" content="Flour Child NTX" />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={shareImage.href} />
+
+{
+  structuredData && (
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  )
+}

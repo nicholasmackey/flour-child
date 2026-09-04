@@ -1,0 +1,76 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+/*
+ * Instagram and Facebook, drawn as line icons in the same weight so they read
+ * as a pair. They are set in the site palette rather than the platforms' own
+ * colours, so nothing bright lands on a plum panel.
+ */
+
+interface Props {
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  /** Names the group for screen readers, e.g. "Flour Child on social media". */
+  label?: string;
+  class?: string;
+}
+
+const {
+  instagramUrl,
+  facebookUrl,
+  label = 'Flour Child on social media',
+  class: className = ''
+} = Astro.props;
+
+const links = [
+  { href: instagramUrl, name: 'Instagram' },
+  { href: facebookUrl, name: 'Facebook' }
+].filter((link): link is { href: string; name: 'Instagram' | 'Facebook' } => Boolean(link.href));
+---
+
+{
+  links.length > 0 && (
+    <ul aria-label={label} class:list={['-mx-3 flex items-center', className]}>
+      {links.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${link.name} (opens in a new tab)`}
+            class="flex h-11 w-11 items-center justify-center rounded-full text-cream/70 transition-colors duration-200 hover:text-buttercream focus-visible:text-buttercream"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              {link.name === 'Instagram' ? (
+                <Fragment>
+                  <rect x="3.25" y="3.25" width="17.5" height="17.5" rx="5" />
+                  <circle cx="12" cy="12" r="4.1" />
+                  <circle cx="16.9" cy="7.1" r="0.9" fill="currentColor" stroke="none" />
+                </Fragment>
+              ) : (
+                <Fragment>
+                  <circle cx="12" cy="12" r="8.75" />
+                  <path d="M14.6 8.4h-1.1a1.9 1.9 0 0 0-1.9 1.9v6.4" />
+                  <path d="M10.1 12.6h3.9" />
+                </Fragment>
+              )}
+            </svg>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}

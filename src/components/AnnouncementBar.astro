@@ -1,0 +1,94 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import type { Announcement } from '../sanity/types';
+
+interface Props {
+  announcement: Announcement;
+}
+
+const { announcement } = Astro.props;
+
+const tones = {
+  plum:  'bg-plum text-cream on-dark',
+  pink:  'bg-pink text-ink',
+  green: 'bg-garden text-cream on-dark',
+  cream: 'bg-buttercream text-plum'
+};
+
+const tone = tones[announcement.tone] ?? tones.plum;
+const hasLink = Boolean(announcement.linkUrl && announcement.linkLabel);
+const isExternal = /^https?:\/\//.test(announcement.linkUrl ?? '');
+---
+
+<aside
+  id="site-announcement"
+  data-announcement-id={announcement._id}
+  class:list={['w-full', tone]}
+  aria-label="Bakery update"
+>
+  <div class="canvas gutter-x relative flex flex-wrap items-center justify-center gap-x-5 gap-y-1 py-3 text-center">
+    <p class="text-sm leading-snug">
+      <strong class="font-bold">{announcement.headline}</strong>
+      {announcement.message && <span class="opacity-85"> {announcement.message}</span>}
+    </p>
+
+    {
+      hasLink && (
+        <a
+          href={announcement.linkUrl}
+          class="quiet-link label"
+          {...isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {}}
+        >
+          {announcement.linkLabel}
+          {isExternal && <span class="sr-only">(opens in a new tab)</span>}
+        </a>
+      )
+    }
+
+    <button
+      type="button"
+      id="site-announcement-close"
+      class="absolute right-4 p-1.5 leading-none transition-opacity hover:opacity-60 sm:static sm:right-auto"
+      aria-label="Dismiss this update"
+    >
+      <svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true" fill="none">
+        <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </div>
+</aside>
+
+<script is:inline>
+  (() => {
+    const bar = document.getElementById('site-announcement');
+    if (!bar) {
+      return;
+    }
+
+    const key = 'flourchild:dismissed-announcement';
+    const id = bar.dataset.announcementId;
+
+    // A dismissal only covers this announcement, in this browser session, so a
+    // newly published one always gets a chance to be seen.
+    try {
+      if (window.sessionStorage.getItem(key) === id) {
+        bar.remove();
+        return;
+      }
+    } catch {
+      // Private browsing can refuse storage. The bar simply stays visible.
+    }
+
+    document.getElementById('site-announcement-close')?.addEventListener('click', () => {
+      bar.remove();
+      try {
+        window.sessionStorage.setItem(key, id ?? '');
+      } catch {
+        // Nothing to do if the browser will not remember it.
+      }
+    });
+  })();
+</script>

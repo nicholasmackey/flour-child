@@ -1,0 +1,210 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import ButtonLink from '../components/ButtonLink.astro';
+import LocationList from '../components/LocationList.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLocations, getSiteSettings } from '../sanity/queries';
+
+const [settings, locations] = await Promise.all([getSiteSettings(), getLocations()]);
+
+const porch = locations.find((location) => location.locationType === 'porch');
+
+/*
+ * The porch record keeps its general area in one line, written as
+ * "Town, State, near a crossroads". The town is what people read first, so it
+ * is split off and the crossroads sits under it, quieter. Nothing here can
+ * reach a street address: a porch record never carries one, and the Studio
+ * hides those fields for it.
+ */
+function splitArea(area?: string | null): [string | null, string | null] {
+  if (!area) {
+    return [null, null];
+  }
+
+  const match = area.match(/^(.+?),\s*(near\b.*)$/i);
+  if (!match) {
+    return [area, null];
+  }
+
+  const [, town, crossroads] = match;
+  return [town, crossroads.charAt(0).toUpperCase() + crossroads.slice(1)];
+}
+
+const [porchTown, porchCrossroads] = splitArea(porch?.approximateArea);
+---
+
+<BaseLayout
+  title={`Find Us | ${settings.businessName}`}
+  description="Porch pickup in Forney, Texas, plus the local shops around North Texas that carry Flour Child gluten-free baked goods each week."
+>
+  <!--
+    The whole page is one centred column: the opening and the porch on cream,
+    the shops on a full width field of garden green, then cream again to close.
+    Type and space do the work, so there is nothing here to put in a box.
+  -->
+  <section class="canvas gutter-x opening">
+    <h1 class="opening-heading">Find Flour Child around North Texas</h1>
+    <p class="opening-lead">
+      Order online for porch pickup in Forney, or find Flour Child at local shops throughout the week.
+    </p>
+  </section>
+
+  {
+    porch && (
+      <section class="canvas gutter-x porch">
+        <h2 class="porch-name">{porch.name}</h2>
+        {porchTown && <p class="porch-town">{porchTown}</p>}
+        {porchCrossroads && <p class="porch-crossroads">{porchCrossroads}</p>}
+        {porch.publicAddressNote && <p class="porch-note">{porch.publicAddressNote}</p>}
+
+        <div class="porch-action">
+          <ButtonLink href={settings.orderUrl} variant="solid">Order Online</ButtonLink>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="shelf on-dark">
+    <div class="canvas gutter-x">
+      <h2 class="shelf-heading">On the Shelf</h2>
+
+      <div class="shelf-body">
+        <LocationList locations={locations} />
+      </div>
+    </div>
+  </section>
+
+  <section class="canvas gutter-x closing">
+    <h2 class="closing-heading">Looking for this week&rsquo;s lineup?</h2>
+    <p class="closing-lead">
+      What is available can vary by location. Bakesy always has the current preorder selection.
+    </p>
+
+    <div class="closing-actions">
+      <ButtonLink href={settings.orderUrl} variant="solid">Order Online</ButtonLink>
+      <ButtonLink href="/menu" variant="text">See the Menu</ButtonLink>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .opening,
+  .porch,
+  .closing {
+    text-align: center;
+  }
+
+  .opening {
+    padding-top: clamp(3rem, 6vw, 5.5rem);
+  }
+
+  .opening-heading {
+    font-size: clamp(2.4rem, 7.4vw, 6rem);
+    letter-spacing: -0.01em;
+    line-height: 0.88;
+    margin-inline: auto;
+    max-width: 15ch;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .opening-lead {
+    color: color-mix(in srgb, var(--color-plum) 78%, transparent);
+    font-size: var(--text-lead);
+    line-height: 1.55;
+    margin-inline: auto;
+    margin-top: clamp(1.5rem, 2.6vw, 2.25rem);
+    max-width: 36rem;
+  }
+
+  /* Porch pickup is the way most people collect an order, so it stands alone. */
+  .porch {
+    padding-block: clamp(4rem, 9vw, 8rem);
+  }
+
+  .porch-name {
+    font-size: clamp(2rem, 4.8vw, 3.6rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .porch-town {
+    color: var(--color-pink-deep);
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.1vw, 1.8rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    margin-top: clamp(0.8rem, 1.2vw, 1.15rem);
+    text-transform: uppercase;
+  }
+
+  .porch-crossroads {
+    font-size: var(--text-lead);
+    line-height: 1.5;
+    margin-top: clamp(0.9rem, 1.4vw, 1.35rem);
+  }
+
+  .porch-note {
+    color: color-mix(in srgb, var(--color-plum) 72%, transparent);
+    margin-inline: auto;
+    margin-top: clamp(0.7rem, 1vw, 1rem);
+    max-width: 30rem;
+  }
+
+  .porch-action {
+    margin-top: clamp(2rem, 3.4vw, 3rem);
+  }
+
+  .shelf {
+    background-color: var(--color-garden);
+    padding-block: clamp(4.5rem, 10vw, 9rem);
+  }
+
+  .shelf-heading {
+    font-size: clamp(2.2rem, 6vw, 5rem);
+    letter-spacing: -0.005em;
+    line-height: 0.9;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .shelf-body {
+    margin-top: clamp(3rem, 6.5vw, 5.5rem);
+  }
+
+  .closing {
+    padding-block: clamp(4.5rem, 10vw, 9rem);
+  }
+
+  .closing-heading {
+    font-size: clamp(2rem, 5.2vw, 4.4rem);
+    letter-spacing: -0.005em;
+    line-height: 0.92;
+    margin-inline: auto;
+    max-width: 18ch;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .closing-lead {
+    color: color-mix(in srgb, var(--color-plum) 78%, transparent);
+    font-size: var(--text-lead);
+    line-height: 1.55;
+    margin-inline: auto;
+    margin-top: clamp(1.4rem, 2.4vw, 2rem);
+    max-width: 34rem;
+  }
+
+  .closing-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    justify-content: center;
+    margin-top: clamp(2rem, 3.6vw, 3.25rem);
+  }
+</style>

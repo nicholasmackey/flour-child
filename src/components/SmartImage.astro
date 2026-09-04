@@ -1,0 +1,74 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+import { hasImage, imageSrcSet, imageUrl } from '../sanity/image';
+import type { SanityImage } from '../sanity/types';
+
+import MediaFrame from './MediaFrame.astro';
+
+interface Props {
+  /** A photo uploaded in the Studio. Wins when it exists. */
+  image?: SanityImage | null;
+  /** A photograph that ships with the repository, used until Sanity has one. */
+  fallback?: ImageMetadata | null;
+  alt?: string;
+  widths?: number[];
+  sizes?: string;
+  /** Width divided by height. Only applies to Sanity crops. */
+  aspectRatio?: number;
+  loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'auto' | 'low';
+  class?: string;
+  /** Shown in the corner of the empty frame when there is no photo yet. */
+  frameLabel?: string;
+}
+
+const {
+  image,
+  fallback,
+  alt = '',
+  widths = [480, 720, 1080],
+  sizes = '100vw',
+  aspectRatio,
+  loading = 'lazy',
+  fetchpriority,
+  class: className = 'h-full w-full object-cover',
+  frameLabel
+} = Astro.props;
+
+const widest = widths[widths.length - 1];
+const describedAlt = image?.alt ?? alt;
+---
+
+{
+  hasImage(image) ? (
+    <img
+      src={imageUrl(image, widest, aspectRatio ? Math.round(widest / aspectRatio) : undefined)}
+      srcset={imageSrcSet(image, widths, aspectRatio)}
+      sizes={sizes}
+      alt={describedAlt}
+      loading={loading}
+      fetchpriority={fetchpriority}
+      decoding="async"
+      class={className}
+    />
+  ) : fallback ? (
+    <Image
+      src={fallback}
+      alt={alt}
+      widths={widths}
+      sizes={sizes}
+      loading={loading}
+      fetchpriority={fetchpriority}
+      decoding="async"
+      class={className}
+    />
+  ) : (
+    <MediaFrame label={frameLabel} />
+  )
+}

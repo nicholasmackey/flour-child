@@ -1,0 +1,33 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+/*
+ * Space held open for a photograph that does not exist yet. It is deliberately
+ * quiet: a hairline, a faint tint and a small label. It should read as an empty
+ * frame waiting for a picture, never as finished artwork, and a real photograph
+ * drops into the same box without the layout changing.
+ */
+
+interface Props {
+  label?: string;
+  class?: string;
+}
+
+const { label, class: className = '' } = Astro.props;
+---
+
+<div
+  class:list={[
+    'relative h-full w-full border border-plum/15 bg-plum/[0.03]',
+    className
+  ]}
+  aria-hidden="true"
+>
+  {
+    label && (
+      <span class="label absolute bottom-3 left-3 text-[0.6rem] text-plum/70">{label}</span>
+    )
+  }
+</div>

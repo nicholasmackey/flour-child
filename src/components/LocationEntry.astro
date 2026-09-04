@@ -1,0 +1,132 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import type { Location } from '../sanity/types';
+
+interface Props {
+  location: Location;
+}
+
+const { location } = Astro.props;
+
+const cityLine = [location.city, location.state].filter(Boolean).join(', ');
+const addressLine = [cityLine, location.postalCode].filter(Boolean).join(' ');
+const delivery = [location.deliveryDay, location.deliveryTime].filter(Boolean).join(' at ');
+
+const restrictions = location.restrictions ?? [];
+const notes = [
+  ...restrictions,
+  ...(location.preordersAllowed === false && !restrictions.includes('No pre-orders') ? ['No pre-orders'] : [])
+];
+
+// A street address only ever comes from a retailer or market record.
+const showsStreetAddress = location.locationType !== 'porch' && Boolean(location.addressLine1);
+---
+
+<article class="entry">
+  <h3 class="entry-name">{location.name}</h3>
+
+  {delivery && <p class="entry-when">{delivery}</p>}
+
+  {
+    showsStreetAddress && (
+      <address class="entry-address">
+        {location.addressLine1}
+        {location.addressLine2 && (
+          <>
+            <br />
+            {location.addressLine2}
+          </>
+        )}
+        <br />
+        {addressLine}
+      </address>
+    )
+  }
+
+  {
+    notes.length > 0 && (
+      <ul class="entry-notes">
+        {notes.map((note) => (
+          <li class="entry-note">{note}</li>
+        ))}
+      </ul>
+    )
+  }
+
+  {location.productsAvailableNote && <p class="entry-aside">{location.productsAvailableNote}</p>}
+</article>
+
+<style>
+  /*
+   * One shop, centred, held together by space rather than a border or a box.
+   * The name is the loudest thing, the day is the reason someone is reading,
+   * and anything that limits an order is the last word.
+   *
+   * The two pinks are local to this component. Brand pink is too dark to sit on
+   * garden green, so these are the same hue lifted until the day line and the
+   * restrictions carry their contrast, and every line here is set large enough
+   * to stay comfortable at that lighter weight of colour.
+   */
+  .entry {
+    --entry-pink: #f0a9c2;
+    --entry-pink-loud: #ff9cb7;
+
+    text-align: center;
+  }
+
+  .entry-name {
+    color: var(--color-cream);
+    font-size: clamp(1.8rem, 4vw, 3.1rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .entry-when {
+    color: var(--entry-pink);
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.1vw, 1.8rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    margin-top: clamp(0.8rem, 1.2vw, 1.15rem);
+    text-transform: uppercase;
+  }
+
+  .entry-address {
+    color: color-mix(in srgb, var(--color-cream) 85%, transparent);
+    font-size: var(--text-lead);
+    font-style: normal;
+    line-height: 1.5;
+    margin-top: clamp(0.9rem, 1.4vw, 1.35rem);
+  }
+
+  .entry-notes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35em 1.75em;
+    justify-content: center;
+    list-style: none;
+    margin-top: clamp(1rem, 1.6vw, 1.5rem);
+    padding: 0;
+  }
+
+  .entry-note {
+    color: var(--entry-pink-loud);
+    font-size: clamp(1.2rem, 1.5vw, 1.35rem);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .entry-aside {
+    color: color-mix(in srgb, var(--color-cream) 85%, transparent);
+    margin-inline: auto;
+    margin-top: clamp(0.8rem, 1.2vw, 1.1rem);
+    max-width: 32rem;
+  }
+</style>

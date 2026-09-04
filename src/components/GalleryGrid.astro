@@ -1,0 +1,42 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import type { GalleryItem } from '../lib/gallery';
+
+import SmartImage from './SmartImage.astro';
+
+interface Props {
+  items: GalleryItem[];
+  class?: string;
+}
+
+const { items, class: className = '' } = Astro.props;
+---
+
+<!--
+  A column layout rather than a grid, so photographs keep their own proportions
+  and the page falls into an uneven, editorial rhythm.
+-->
+<div class:list={['columns-1 gap-6 sm:columns-2 lg:columns-3 lg:gap-8 [&>*]:mb-6 lg:[&>*]:mb-8', className]}>
+  {
+    items.map((item) => (
+      <figure class="break-inside-avoid">
+        <div style={`aspect-ratio: ${item.aspectRatio}`}>
+          <SmartImage
+            image={item.image}
+            fallback={item.fallback}
+            alt={item.alt}
+            widths={[400, 640, 960]}
+            sizes="(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw"
+            aspectRatio={item.aspectRatio}
+            class="h-full w-full object-cover"
+            frameLabel={item.placeholderLabel}
+          />
+        </div>
+        {item.caption && <figcaption class="mt-3 text-plum/75">{item.caption}</figcaption>}
+      </figure>
+    ))
+  }
+</div>

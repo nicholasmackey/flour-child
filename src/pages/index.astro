@@ -1,17 +1,559 @@
 ---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
 
+import { Image } from 'astro:assets';
+
+import ButtonLink from '../components/ButtonLink.astro';
+import DisplayHeading from '../components/DisplayHeading.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getHomePage, getSiteSettings } from '../sanity/queries';
+
+import cinnamonRoll from '../assets/images/hero/cinnamon-roll.png';
+
+const [settings, home] = await Promise.all([getSiteSettings(), getHomePage()]);
+
+const HERO_LINES = ['Small-batch baked goods', 'made from scratch in', 'Forney, Texas.'];
+
+const primaryCtaUrl = home.primaryCtaUrl ?? settings.orderUrl;
+
+/* The intro copy is written as paragraphs separated by a blank line. */
+const INTRO_PARAGRAPHS = (home.introBody ?? '')
+  .split(/\n\s*\n/)
+  .map((paragraph) => paragraph.trim())
+  .filter(Boolean);
+
+/*
+ * The band at the foot of the intro. Three copies go into the markup and the
+ * track moves by exactly one of them, so the loop meets itself; the third is
+ * there for screens wide enough to see past two.
+ */
+const BAND_PHRASES = [
+  'Made from scratch',
+  'Small batch',
+  'Baked to order',
+  'Gluten-free baking',
+  'Forney, Texas'
+];
+
+const BAND_RUN = [...BAND_PHRASES, ...BAND_PHRASES, ...BAND_PHRASES];
+
+const [city, region] = settings.locationLabel.split(',').map((part) => part.trim());
+
+const structuredData = {
+  '@context':  'https://schema.org',
+  '@type':     'Bakery',
+  name:        settings.businessName,
+  description: settings.defaultSeoDescription,
+  url:         Astro.site?.href,
+  image:       new URL('/brand/flour-child-share.png', Astro.site).href,
+  address: {
+    '@type':         'PostalAddress',
+    addressLocality: city,
+    addressRegion:   region,
+    addressCountry:  'US'
+  },
+  servesCuisine: 'Gluten-free baked goods',
+  areaServed:    'North Texas',
+  ...(settings.instagramUrl || settings.facebookUrl
+    ? { sameAs: [settings.instagramUrl, settings.facebookUrl].filter(Boolean) }
+    : {}),
+  potentialAction: { '@type': 'OrderAction', target: settings.orderUrl }
+};
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+  title={home.seoTitle ?? settings.defaultSeoTitle}
+  description={home.seoDescription ?? settings.defaultSeoDescription}
+  structuredData={structuredData}
+  headerTheme="dark"
+>
+  <!--
+    Opening: plum to the edges, three lines of display type, and the roll hung
+    over the boundary so it finishes in the cream section below.
+  -->
+  <section class="hero">
+    <div class="hero-plum on-dark">
+      <div class="canvas gutter-x">
+        <h1 class="hero-headline display">
+          {HERO_LINES.map((line, index) => (
+            <>
+              <span class="hero-line">{line}</span>
+              {index < HERO_LINES.length - 1 ? ' ' : ''}
+            </>
+          ))}
+        </h1>
+
+        <div class="hero-actions">
+          <ButtonLink href={primaryCtaUrl} variant="onDark">Order now</ButtonLink>
+          <a href="#how-it-works" class="hero-quiet label">How does it work?</a>
+        </div>
+      </div>
+
+      <div class="hero-roll" data-hero-roll>
+        <Image
+          src={cinnamonRoll}
+          alt="A Flour Child cinnamon roll under cream cheese icing and a caramel drizzle"
+          widths={[420, 640, 840, 1000]}
+          sizes="(min-width: 1280px) 52rem, (min-width: 640px) 58vw, 19rem"
+          loading="eager"
+          fetchpriority="high"
+          class="block h-auto w-full"
+        />
+        <span class="hero-sheen" aria-hidden="true"><span class="hero-sheen-light" data-hero-sheen /></span>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    Intro: the same cream the roll lands on, so the two read as one field. It is
+    the supporting half of the opening rather than a second one, so everything
+    stacks down the left of the page gutter and each part is held to its own
+    measure: the statement across about two thirds of the page, the copy at a
+    reading width under it, then the two links that carry on to the menu or a
+    pickup spot. The band puts the first stripe of colour on the page and hands
+    it to whatever comes next.
+  -->
+  <section class="intro">
+    <div class="canvas gutter-x">
+      <DisplayHeading text={home.introHeading} class="intro-heading text-balance uppercase" />
+
+      {INTRO_PARAGRAPHS.length > 0 && (
+        <div class="intro-copy">
+          {INTRO_PARAGRAPHS.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+      )}
+
+      <div class="intro-actions">
+        <ButtonLink href="/menu" variant="solid">See This Week&apos;s Menu</ButtonLink>
+        <ButtonLink href="/find-us" variant="text">Find Flour Child</ButtonLink>
+      </div>
+    </div>
+
+    <div class="intro-band" aria-hidden="true">
+      <div class="intro-track">
+        {BAND_RUN.map((phrase) => <span class="intro-phrase display">{phrase}</span>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  /*
+   * Two small hero interactions:
+   *
+   *   - the roll drifts and swells as it leaves the top of the screen
+   *   - a soft highlight follows the pointer over the icing on hover
+   *
+   * Neither runs under reduced motion. The first runs everywhere, touch
+   * included: it is one transform written on a frame the browser was already
+   * painting, so it rides momentum scrolling rather than fighting it. The
+   * second waits for a pointer, since there is nothing to catch the light.
+   */
+  const roll = document.querySelector<HTMLElement>('[data-hero-roll]');
+  const hero = roll?.closest<HTMLElement>('.hero');
+  const light = roll?.querySelector<HTMLElement>('[data-hero-sheen]');
+
+  if (roll && hero && light) {
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const fine = window.matchMedia('(min-width: 768px) and (hover: hover) and (pointer: fine)');
+    const mayMove = () => !calm.matches;
+    const mayShine = () => fine.matches && !calm.matches;
+
+    /*
+     * The drift. Kept to a few dozen pixels over the whole hero: enough to read
+     * as depth, not enough to pull the roll off the plum edge it hangs on.
+     */
+    const MAX_DRIFT = 44;
+
+    /*
+     * The growth, as a fraction of the resting size. Held apart from the drift
+     * so the roll swells by the same share of itself at every width, and set
+     * past the drift's own few dozen pixels: the roll should read as coming
+     * towards the reader on the way out, a shade rather than a lunge.
+     */
+    const MAX_GROWTH = 0.12;
+
+    let driftFrame = 0;
+    let drifting = false;
+    let onScreen = true;
+
+    const drift = () => {
+      driftFrame = 0;
+      /*
+       * Progress is measured against the roll's own travel rather than the
+       * hero's: it runs out when the foot of the roll passes the top of the
+       * screen, so the whole move plays while the roll is still in view
+       * instead of finishing somewhere below the fold. offsetTop and
+       * offsetHeight are layout values, so the transform below never feeds
+       * back into the reading.
+       */
+      const scrolled = window.scrollY;
+      const foot = hero.getBoundingClientRect().top + roll.offsetTop + roll.offsetHeight;
+      const travel = scrolled + foot;
+      const progress = travel > 0 ? Math.min(Math.max(scrolled / travel, 0), 1) : 0;
+      roll.style.setProperty('--roll-shift', `${(progress * MAX_DRIFT).toFixed(2)}px`);
+      roll.style.setProperty('--roll-scale', (1 + progress * MAX_GROWTH).toFixed(4));
+    };
+
+    const onScroll = () => {
+      // One transform write per frame, however fast the scroll events arrive.
+      if (!driftFrame) {
+        driftFrame = window.requestAnimationFrame(drift);
+      }
+    };
+
+    const setDrift = (on: boolean) => {
+      if (on === drifting) {
+        return;
+      }
+
+      drifting = on;
+      roll.classList.toggle('is-drifting', on);
+
+      if (on) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        drift();
+        return;
+      }
+
+      window.removeEventListener('scroll', onScroll);
+      if (driftFrame) {
+        window.cancelAnimationFrame(driftFrame);
+        driftFrame = 0;
+      }
+    };
+
+    /*
+     * The sheen. Travel is a fraction of the pointer's distance from the middle,
+     * so the light drifts with the pointer rather than chasing it, and the
+     * transition in the stylesheet does the easing.
+     */
+    const TRAVEL_X = 0.16;
+    const TRAVEL_Y = 0.1;
+
+    let sheenFrame = 0;
+    let shining = false;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const shine = () => {
+      sheenFrame = 0;
+      const { left, top, width, height } = roll.getBoundingClientRect();
+      const x = (pointerX - left - width / 2) * TRAVEL_X;
+      const y = (pointerY - top - height / 2) * TRAVEL_Y;
+      light.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') {
+        return;
+      }
+
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (!sheenFrame) {
+        sheenFrame = window.requestAnimationFrame(shine);
+      }
+    };
+
+    // Settle back to the middle rather than holding wherever the pointer left.
+    const onPointerLeave = () => {
+      light.style.transform = '';
+    };
+
+    const setSheen = (on: boolean) => {
+      if (on === shining) {
+        return;
+      }
+
+      shining = on;
+
+      if (on) {
+        roll.addEventListener('pointermove', onPointerMove);
+        roll.addEventListener('pointerleave', onPointerLeave);
+        return;
+      }
+
+      roll.removeEventListener('pointermove', onPointerMove);
+      roll.removeEventListener('pointerleave', onPointerLeave);
+      if (sheenFrame) {
+        window.cancelAnimationFrame(sheenFrame);
+        sheenFrame = 0;
+      }
+      light.style.transform = '';
+    };
+
+    /* Both effects follow the current preferences, which can change mid-visit. */
+    const sync = () => {
+      setDrift(onScreen && mayMove());
+      setSheen(mayShine());
+      if (!mayMove()) {
+        roll.style.removeProperty('--roll-shift');
+        roll.style.removeProperty('--roll-scale');
+      }
+    };
+
+    // Nothing to compute while the hero is off screen; the last offset is left
+    // in place so scrolling back up picks up where it left off.
+    new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      setDrift(onScreen && mayMove());
+    }).observe(hero);
+
+    calm.addEventListener('change', sync);
+    fine.addEventListener('change', sync);
+    sync();
+  }
+</script>
+
+
+
+<style>
+  /*
+   * The hero is one plum block with a cream floor underneath it. The roll sits
+   * in normal flow at the foot of the plum and carries a negative bottom
+   * margin, so the plum ends early and the cutout finishes on the cream. The
+   * section pads itself by the same amount, so nothing below has to move.
+   */
+  .hero {
+    /* The cutout is square, so one value drives both its size and its overhang. */
+    --roll-size: clamp(19rem, 58vw, 52rem);
+    --roll-drop: calc(var(--roll-size) * 0.2);
+    position: relative;
+    background-color: var(--color-cream);
+    padding-bottom: var(--roll-drop);
+  }
+
+  .hero-plum {
+    /* flow-root keeps the negative margin inside this block instead of collapsing. */
+    display: flow-root;
+    background-color: var(--color-plum);
+    padding-top: clamp(2.25rem, 4.5vw, 5rem);
+  }
+
+  .hero-headline {
+    color: var(--color-pink-soft);
+    font-size: clamp(2rem, 7vw, 4rem);
+    letter-spacing: 0.01em;
+    line-height: 1.02;
+    text-align: center;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  /* Narrow screens reflow the copy, wide screens keep the written line breaks. */
+  .hero-line {
+    display: inline;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1.5rem, 5.5vw, 5rem);
+    margin-top: clamp(1.25rem, 1.6vw, 1.75rem);
+  }
+
+  .hero-quiet {
+    color: color-mix(in srgb, var(--color-cream) 85%, transparent);
+    transition: color 200ms ease;
+  }
+
+  .hero-quiet:hover {
+    color: var(--color-cream);
+  }
+
+  /*
+   * The roll sits on its own transform so the drift below never touches layout,
+   * and so the sheen has something to be positioned against. --roll-shift and
+   * --roll-scale are written by the script and default to a no-op; the scale
+   * grows from the foot so the roll swells into the plum as it drifts.
+   */
+  .hero-roll {
+    position: relative;
+    width: var(--roll-size);
+    margin-inline: auto;
+    margin-top: clamp(1.5rem, 2.5vw, 2.5rem);
+    margin-bottom: calc(var(--roll-drop) * -1);
+    transform: translate(0, var(--roll-shift, 0px)) scale(var(--roll-scale, 1));
+    transform-origin: 50% 100%;
+  }
+
+  /* Only worth promoting the layer while the hero is actually on screen. */
+  .hero-roll.is-drifting {
+    will-change: transform;
+  }
+
+  /*
+   * The icing sheen. The wrapper is masked to a soft circle so the light stays
+   * on the roll rather than the corners of the square cutout, and it carries
+   * the blend so the highlight lifts the icing instead of painting over it.
+   * Hidden by default: it is switched on only for hovering pointer devices.
+   */
+  .hero-sheen {
+    display: none;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0;
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+    transition: opacity 450ms ease;
+    -webkit-mask-image: radial-gradient(circle at 50% 47%, #000 50%, transparent 78%);
+    mask-image: radial-gradient(circle at 50% 47%, #000 50%, transparent 78%);
+  }
+
+  /* The light itself only ever moves, so following the pointer costs no paint. */
+  .hero-sheen-light {
+    position: absolute;
+    inset: 18% 16% 30%;
+    background: radial-gradient(
+      closest-side at 50% 50%,
+      rgb(255 255 255 / 0.5),
+      rgb(255 255 255 / 0.16) 48%,
+      rgb(255 255 255 / 0) 74%
+    );
+    transition: transform 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .hero-sheen {
+      display: block;
+    }
+
+    .hero-roll:hover .hero-sheen {
+      opacity: 1;
+    }
+
+    .hero-roll:hover .hero-sheen-light {
+      will-change: transform;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-line {
+      display: block;
+    }
+
+    /* Sized so the longest line lands at roughly four fifths of the viewport. */
+    .hero-headline {
+      font-size: min(4.9vw, 5.3rem);
+    }
+  }
+
+  /*
+   * The intro carries on the hero's cream floor, so there is no seam under the
+   * roll and the padding above the statement is the only gap on the page.
+   */
+  .intro {
+    background-color: var(--color-cream);
+    padding-top: clamp(2.25rem, 4.4vw, 5.25rem);
+  }
+
+  /*
+   * The statement is measured so it breaks into two lines that run to roughly
+   * two thirds of the page: that width is what gives the section its weight,
+   * which means it can be set well below the hero and still hold the page.
+   *
+   * The heading itself comes out of DisplayHeading, so it carries that
+   * component's scope rather than this page's; reaching it through the section
+   * keeps the rule as local as every other one here.
+   */
+  .intro :global(.intro-heading) {
+    max-width: 52rem;
+    /*
+     * Sized off the viewport so the two lines keep their proportion as the
+     * page narrows, which holds the break at "happens" all the way down to the
+     * smallest phone rather than stranding a word on a third line.
+     */
+    font-size: clamp(1.35rem, 6vw, 2rem);
+    line-height: 1;
+    letter-spacing: -0.005em;
+  }
+
+  /*
+   * The second voice, and a quiet one: a reading measure under the statement,
+   * set close enough to belong to it, with the two paragraphs held together.
+   */
+  .intro-copy {
+    max-width: 38rem;
+    margin-top: clamp(0.9rem, 1.5vw, 1.6rem);
+    color: color-mix(in srgb, var(--color-plum) 82%, transparent);
+    font-size: clamp(1rem, 1.25vw, 1.15rem);
+    line-height: 1.5;
+  }
+
+  .intro-copy p + p {
+    margin-top: 0.7em;
+  }
+
+  .intro-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    /* One row wherever both fit; close under the button where they do not. */
+    gap: 0.75rem clamp(1.5rem, 2.4vw, 2.5rem);
+    margin-top: clamp(1.25rem, 2.2vw, 2.25rem);
+  }
+
+  @media (min-width: 768px) {
+    /* Picks up almost exactly where the mobile cap leaves off. */
+    .intro :global(.intro-heading) {
+      font-size: min(4.15vw, 3.9rem);
+    }
+  }
+
+  .intro-band {
+    overflow: hidden;
+    margin-top: clamp(2.25rem, 3.6vw, 3.75rem);
+    background-color: var(--color-pink);
+    padding-block: clamp(0.65rem, 1.1vw, 1rem);
+    color: var(--color-cream);
+  }
+
+  .intro-track {
+    display: flex;
+    width: max-content;
+    animation: intro-band 34s linear infinite;
+  }
+
+  /* Never smaller than large bold text: cream on pink is a 3:1 contrast. */
+  .intro-phrase {
+    display: flex;
+    align-items: center;
+    gap: clamp(1.25rem, 2.4vw, 2.5rem);
+    padding-right: clamp(1.25rem, 2.4vw, 2.5rem);
+    font-size: clamp(1.2rem, 2vw, 1.9rem);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* The dot between phrases, carried by the phrase in front of it. */
+  .intro-phrase::after {
+    content: '';
+    width: 0.32em;
+    height: 0.32em;
+    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--color-cream) 70%, transparent);
+  }
+
+  @keyframes intro-band {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+
+    to {
+      transform: translate3d(-33.3333%, 0, 0);
+    }
+  }
+
+  /* The band stands still rather than creeping at a thousandth of a second. */
+  @media (prefers-reduced-motion: reduce) {
+    .intro-track {
+      animation: none;
+    }
+  }
+</style>

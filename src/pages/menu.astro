@@ -1,0 +1,99 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import ButtonLink from '../components/ButtonLink.astro';
+import FeaturedProductCard from '../components/FeaturedProduct.astro';
+import MenuComposition from '../components/MenuComposition.astro';
+import OrderCta from '../components/OrderCta.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getFeaturedProducts, getMenuCategories, getSiteSettings } from '../sanity/queries';
+
+const [settings, categories, featured] = await Promise.all([
+  getSiteSettings(),
+  getMenuCategories(),
+  getFeaturedProducts()
+]);
+
+/* Set in Acumin, which has the currency and percent glyphs the display face does not. */
+const orderingDetails = [
+  { term: 'Order minimum', value: `$${settings.orderMinimum}` },
+  { term: 'Typical deposit', value: `${settings.depositPercent}%` },
+  { term: 'Typical lead time', value: `${settings.typicalLeadTimeDays} days` }
+];
+
+const productShapes = ['4 / 5', '1 / 1', '3 / 4'];
+---
+
+<BaseLayout
+  title={`Menu | ${settings.businessName}`}
+  description="Gluten-free bread, cinnamon rolls, cookies, cakes, muffins, scones and kolache, baked from scratch in Forney, Texas. Order online through Bakesy."
+>
+  <section class="canvas gutter-x pt-8 pb-20 md:pb-28">
+    <p class="label text-pink-deep">Menu</p>
+    <h1 class="mt-8 max-w-5xl text-display">What Hailey bakes</h1>
+
+    <div class="rule mt-14 grid gap-8 pt-6 md:grid-cols-12 md:items-baseline">
+      <p class="max-w-md text-lead text-plum/75 md:col-span-5">
+        Everything is gluten-free. What is available changes week to week, so treat this as the kind of baking
+        to expect rather than a fixed list.
+      </p>
+      <div class="md:col-span-3 md:col-start-10 md:justify-self-end">
+        <ButtonLink href={settings.orderUrl} variant="solid">See What&apos;s Available</ButtonLink>
+      </div>
+    </div>
+  </section>
+
+  <section class="canvas gutter-x pb-24 md:pb-32" aria-labelledby="ordering-basics">
+    <h2 id="ordering-basics" class="label text-plum/70">How ordering works</h2>
+    <dl class="mt-8 grid gap-10 sm:grid-cols-3">
+      {
+        orderingDetails.map((detail) => (
+          <div class="rule pt-5">
+            <dt class="label text-plum/70">{detail.term}</dt>
+            <dd class="mt-3 text-title font-bold">{detail.value}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="canvas gutter-x pb-24 md:pb-32">
+    <MenuComposition categories={categories} orderUrl={settings.orderUrl} withOrderLinks />
+  </section>
+
+  {
+    featured.length > 0 && (
+      <section class="canvas gutter-x pb-24 md:pb-32">
+        <div class="rule grid gap-6 pt-8 md:grid-cols-12 md:items-baseline">
+          <h2 class="text-headline md:col-span-6">Featured right now</h2>
+          <p class="max-w-sm text-plum/70 md:col-span-5 md:col-start-8">
+            A few things worth pointing out. Bakesy is still where everything available this week lives.
+          </p>
+        </div>
+
+        <div class="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:items-start">
+          {featured.map((product, index) => (
+            <div class:list={[index % 3 === 1 ? 'lg:mt-16' : '']}>
+              <FeaturedProductCard
+                product={product}
+                orderUrl={settings.orderUrl}
+                aspectRatio={productShapes[index % productShapes.length]}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <OrderCta
+    heading="Everything this week is on Bakesy"
+    body="Pricing, sizes and what is actually in the case are all kept up to date there."
+    label="See What's Available"
+    href={settings.orderUrl}
+    secondaryHref="/find-us"
+    secondaryLabel="Find a pickup spot"
+  />
+</BaseLayout>

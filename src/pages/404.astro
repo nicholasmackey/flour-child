@@ -1,0 +1,42 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import ButtonLink from '../components/ButtonLink.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { NAV_LINKS } from '../lib/navigation';
+import { getSiteSettings } from '../sanity/queries';
+
+const settings = await getSiteSettings();
+---
+
+<BaseLayout
+  title={`Page not found | ${settings.businessName}`}
+  description="That page is not on the menu. Head back to the Flour Child NTX home page."
+  noindex
+>
+  <section class="canvas gutter-x flex min-h-[60vh] flex-col justify-center py-24">
+    <p class="label text-pink-deep">Page not found</p>
+    <h1 class="mt-8 max-w-4xl text-display">That page is not on the menu</h1>
+
+    <div class="rule mt-14 grid gap-8 pt-6 md:grid-cols-12 md:items-baseline">
+      <div class="flex flex-wrap items-center gap-x-8 gap-y-4 md:col-span-6">
+        <ButtonLink href="/" variant="solid">Back to the home page</ButtonLink>
+        <ButtonLink href={settings.orderUrl} variant="text">Order Online</ButtonLink>
+      </div>
+
+      <nav aria-label="Pages" class="md:col-span-5 md:col-start-8">
+        <ul class="flex flex-wrap gap-x-6 gap-y-2">
+          {
+            NAV_LINKS.map((link) => (
+              <li>
+                <a href={link.href} class="quiet-link label text-plum/70">{link.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+  </section>
+</BaseLayout>

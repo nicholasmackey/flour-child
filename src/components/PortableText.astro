@@ -1,0 +1,19 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import { portableTextToHtml } from '../lib/portableText';
+import type { PortableTextBlock } from '../sanity/types';
+
+interface Props {
+  blocks?: PortableTextBlock[] | null;
+  class?: string;
+}
+
+const { blocks, class: className = '' } = Astro.props;
+
+const html = portableTextToHtml(blocks);
+---
+
+{html && <div class:list={['prose-fc', className]} set:html={html} />}

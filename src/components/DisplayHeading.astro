@@ -1,0 +1,26 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import { markAccentedWords } from '../lib/text';
+
+/*
+ * Display type is set large enough that a line break after a hyphen is very
+ * visible, and "GLUTEN-" stranded on its own line reads as a mistake. This
+ * keeps hyphenated words together, picks out any words the copy wrapped in
+ * *asterisks* in the accent colour, and otherwise renders plain text.
+ */
+
+interface Props {
+  text?: string | null;
+  as?: 'h1' | 'h2' | 'h3';
+  class?: string;
+}
+
+const { text, as = 'h2', class: className = '' }: Props = Astro.props;
+
+const Tag = as;
+---
+
+{text && <Tag class={className} set:html={markAccentedWords(text)} />}

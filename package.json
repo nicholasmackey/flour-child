@@ -9,12 +9,40 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "check": "astro check",
+    "astro": "astro",
+    "fonts": "node scripts/build-fonts.mjs",
+    "seed:build": "node scripts/generate-seed.mjs",
+    "seed": "sanity dataset import sanity/seed.ndjson production --replace",
+    "brand:images": "node scripts/generate-brand-images.mjs"
   },
   "dependencies": {
-    "astro": "^7.3.1"
+    "@astrojs/react": "^6.0.5",
+    "@sanity/astro": "^3.5.1",
+    "@sanity/client": "^8.5.0",
+    "@sanity/icons": "^5.2.1",
+    "@sanity/image-url": "^2.1.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-is": "^19.2.8",
+    "sanity": "^6.12.0",
+    "sharp": "^0.35.4",
+    "styled-components": "^6.5.3",
+    "tailwindcss": "^4.3.3"
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/fontkit": "^2.0.9",
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "fontkit": "^2.0.4",
+    "typescript": "^6.0.3",
+    "wawoff2": "^2.0.1"
   }
 }

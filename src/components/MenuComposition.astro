@@ -1,0 +1,92 @@
+---
+/*
+ * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
+ */
+
+import type { MenuCategory } from '../sanity/types';
+
+import SmartImage from './SmartImage.astro';
+
+interface Props {
+  categories: MenuCategory[];
+  orderUrl: string;
+  /** The menu page adds an ordering link under each category. */
+  withOrderLinks?: boolean;
+}
+
+const { categories, orderUrl, withOrderLinks = false } = Astro.props;
+
+/*
+ * A fixed set of positions on a twelve column grid. Sizes, aspect ratios and
+ * vertical offsets all differ on purpose, so the page reads as a composition
+ * rather than a row of matching tiles. The list repeats if more categories are
+ * added in the Studio.
+ */
+const PLACEMENTS = [
+  { column: 'lg:col-start-1 lg:col-span-5', aspect: '4 / 5', offset: 'lg:mt-0',   bleed: 'left' },
+  { column: 'lg:col-start-7 lg:col-span-4', aspect: '3 / 4', offset: 'lg:mt-28',  bleed: 'none' },
+  { column: 'lg:col-start-2 lg:col-span-4', aspect: '1 / 1', offset: 'lg:mt-12',  bleed: 'none' },
+  { column: 'lg:col-start-8 lg:col-span-5', aspect: '5 / 4', offset: 'lg:-mt-20', bleed: 'right' },
+  { column: 'lg:col-start-1 lg:col-span-4', aspect: '3 / 4', offset: 'lg:mt-4',   bleed: 'left' },
+  { column: 'lg:col-start-6 lg:col-span-5', aspect: '3 / 2', offset: 'lg:mt-32',  bleed: 'none' }
+];
+
+/* Mobile keeps the varied shapes but alternates which edge each photo runs to. */
+const MOBILE = ['aspect-[4/5]', 'aspect-[3/4]', 'aspect-square', 'aspect-[5/4]', 'aspect-[3/4]', 'aspect-[3/2]'];
+---
+
+<div class="grid gap-y-16 lg:grid-cols-12 lg:items-start lg:gap-x-8 lg:gap-y-4">
+  {
+    categories.map((category, index) => {
+      const place = PLACEMENTS[index % PLACEMENTS.length];
+      const mobileAspect = MOBILE[index % MOBILE.length];
+
+      return (
+        <article id={category.slug} class:list={['group', place.column, place.offset]}>
+          <div
+            class:list={[
+              'overflow-hidden',
+              mobileAspect,
+              'lg:aspect-[var(--shape)]',
+              // Photographs run past the gutter only where the composition is wide
+              // enough to read as deliberate. On a phone everything stays inside it.
+              place.bleed === 'left' ? 'lg:-ml-[var(--gutter)]' : '',
+              place.bleed === 'right' ? 'lg:-mr-[var(--gutter)]' : ''
+            ]}
+            style={`--shape: ${place.aspect}`}
+          >
+            <SmartImage
+              image={category.image}
+              alt={category.name}
+              widths={[480, 768, 1200]}
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              class="h-full w-full object-cover transition-transform duration-700 ease-out
+                     group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              frameLabel={category.name}
+            />
+          </div>
+
+          <div class="mt-5 max-w-sm">
+            <h3 class="text-title">{category.name}</h3>
+            {category.description && <p class="mt-2 text-plum/70">{category.description}</p>}
+            {
+              withOrderLinks && (
+                <p class="mt-4">
+                  <a
+                    href={category.orderUrl ?? orderUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="quiet-link label text-pink-deep"
+                  >
+                    Order on Bakesy
+                    <span class="sr-only">(opens in a new tab)</span>
+                  </a>
+                </p>
+              )
+            }
+          </div>
+        </article>
+      );
+    })
+  }
+</div>
