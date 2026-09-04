@@ -28,6 +28,13 @@ import type {
  */
 export const BAKESY_ORDER_URL = 'https://bakesy.shop/b/flour-child-ntx';
 
+/**
+ * The baked goods order request on Bakesy: this week's actual list, with
+ * pricing. Where "See What's Available" points, rather than the shop front.
+ */
+export const BAKESY_BAKED_GOODS_URL =
+  'https://bakesy.shop/order-request/1b431535-3211-409e-8774-1b754c4e6921/baked-goods';
+
 export const SITE_DEFAULTS: SiteSettings = {
   businessName:          'Flour Child NTX',
   shortName:             'Flour Child',

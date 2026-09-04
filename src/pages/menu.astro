@@ -8,6 +8,7 @@ import FeaturedProductCard from '../components/FeaturedProduct.astro';
 import MenuComposition from '../components/MenuComposition.astro';
 import OrderCta from '../components/OrderCta.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { BAKESY_BAKED_GOODS_URL } from '../sanity/defaults';
 import { getFeaturedProducts, getMenuCategories, getSiteSettings } from '../sanity/queries';
 
 const [settings, categories, featured] = await Promise.all([
@@ -40,7 +41,7 @@ const productShapes = ['4 / 5', '1 / 1', '3 / 4'];
         to expect rather than a fixed list.
       </p>
       <div class="md:col-span-3 md:col-start-10 md:justify-self-end">
-        <ButtonLink href={settings.orderUrl} variant="solid">See What&apos;s Available</ButtonLink>
+        <ButtonLink href={BAKESY_BAKED_GOODS_URL} variant="solid">See What&apos;s Available</ButtonLink>
       </div>
     </div>
   </section>
@@ -92,7 +93,7 @@ const productShapes = ['4 / 5', '1 / 1', '3 / 4'];
     heading="Everything this week is on Bakesy"
     body="Pricing, sizes and what is actually in the case are all kept up to date there."
     label="See What's Available"
-    href={settings.orderUrl}
+    href={BAKESY_BAKED_GOODS_URL}
     secondaryHref="/find-us"
     secondaryLabel="Find a pickup spot"
   />
