@@ -4,6 +4,7 @@
  */
 
 import AnnouncementBar from '../components/AnnouncementBar.astro';
+import CustomCursor from '../components/CustomCursor.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Seo from '../components/Seo.astro';
@@ -64,6 +65,8 @@ const preloadFonts = ['hamburg-hand-bold', 'acumin-pro-regular']
   </head>
 
   <body class="flex min-h-screen flex-col">
+    <CustomCursor />
+
     <a
       href="#main"
       class="label sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50
@@ -78,6 +81,9 @@ const preloadFonts = ['hamburg-hand-bold', 'acumin-pro-regular']
       orderUrl={settings.orderUrl}
       locationLabel={settings.locationLabel}
       pathname={pathname}
+      businessName={settings.businessName}
+      instagramUrl={settings.instagramUrl}
+      facebookUrl={settings.facebookUrl}
       theme={headerTheme}
     />
 

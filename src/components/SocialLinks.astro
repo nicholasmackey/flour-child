@@ -14,6 +14,11 @@ interface Props {
   facebookUrl?: string | null;
   /** Names the group for screen readers, e.g. "Flour Child on social media". */
   label?: string;
+  /**
+   * `cream` is the pair as the footer sets them, on plum. `nav` hands the
+   * colour to the header, so the icons shift with the links beside them.
+   */
+  tone?: 'cream' | 'nav';
   class?: string;
 }
 
@@ -21,6 +26,7 @@ const {
   instagramUrl,
   facebookUrl,
   label = 'Flour Child on social media',
+  tone = 'cream',
   class: className = ''
 } = Astro.props;
 
@@ -40,7 +46,12 @@ const links = [
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`${link.name} (opens in a new tab)`}
-            class="flex h-11 w-11 items-center justify-center rounded-full text-cream/70 transition-colors duration-200 hover:text-buttercream focus-visible:text-buttercream"
+            class:list={[
+              'flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200',
+              tone === 'nav'
+                ? 'social-link'
+                : 'text-cream/70 hover:text-buttercream focus-visible:text-buttercream'
+            ]}
           >
             <svg
               viewBox="0 0 24 24"
@@ -74,3 +85,19 @@ const links = [
     </ul>
   )
 }
+
+<style>
+  /*
+   * The header publishes its own colours and moves them on scroll. Reading
+   * them here rather than setting a colour keeps the icons on the same footing
+   * as the links across the row, so the whole bar changes as one.
+   */
+  .social-link {
+    color: var(--nav-fg);
+  }
+
+  .social-link:hover,
+  .social-link:focus-visible {
+    color: var(--nav-accent);
+  }
+</style>

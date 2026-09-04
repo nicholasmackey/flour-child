@@ -3,51 +3,71 @@
  * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
  */
 
-import { NAV_LINKS, isCurrent } from '../lib/navigation';
+import { MOBILE_NAV_LINKS, isCurrent } from '../lib/navigation';
 import { withBase } from '../lib/paths';
 
-import Logo from './Logo.astro';
+import SocialLinks from './SocialLinks.astro';
 
 interface Props {
   orderUrl: string;
   locationLabel: string;
   pathname: string;
-  /** Matches the header it sits in. The panel itself is always on plum. */
-  theme?: 'light' | 'dark';
+  businessName: string;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
 }
 
-const { orderUrl, locationLabel, pathname, theme = 'light' } = Astro.props;
+const { orderUrl, locationLabel, pathname, businessName, instagramUrl, facebookUrl } = Astro.props;
+
+/* The links come in one after another; the block under them follows last. */
+const tailIndex = MOBILE_NAV_LINKS.length;
 ---
 
+<!--
+  The bars are drawn in the same weight as the social icons opposite them, in a
+  box of the same size, so the two ends of the row balance. Colour is taken from
+  the header rather than set here, which keeps it moving with everything else.
+  The negative margin is the icon's own padding, so the bars land on the gutter.
+-->
 <button
   type="button"
   id="mobile-nav-toggle"
-  class:list={['label lg:hidden', theme === 'dark' ? 'text-cream' : 'text-plum']}
+  class="nav-toggle -mr-3 flex h-11 w-11 items-center justify-center rounded-full lg:hidden"
   aria-expanded="false"
   aria-controls="mobile-nav"
 >
-  Menu
+  <span class="sr-only">Menu</span>
+  <span class="nav-bars" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+  </span>
 </button>
 
-<div id="mobile-nav" class="on-dark fixed inset-0 z-50 flex flex-col bg-plum lg:hidden" hidden>
-  <div class="gutter-x flex items-center justify-between py-6">
-    <a href={withBase('/')} data-mobile-nav-link aria-label="Flour Child NTX home">
-      <Logo variant="wordmark" color="white" alt="Flour Child NTX" class="w-28" />
-    </a>
-    <button type="button" id="mobile-nav-close" class="label text-cream">Close</button>
-  </div>
-
-  <nav aria-label="Main" class="gutter-x flex flex-1 flex-col justify-center pb-16">
+<!--
+  The panel is the rest of the screen, not the whole of it: it opens beneath the
+  bar and leaves the logo and the button that opened it in place, so the way out
+  is the same control as the way in. The bar's own social pair steps aside while
+  it is open; the menu carries that pair itself, at the foot of one column that
+  runs pages, order, pair, town from the bar down.
+-->
+<div id="mobile-nav" class="mobile-nav on-dark flex flex-col bg-plum lg:hidden" hidden>
+  <nav aria-label="Main" class="menu-body gutter-x flex flex-1 flex-col overflow-y-auto">
     <ul>
       {
-        NAV_LINKS.map((link) => (
-          <li>
+        MOBILE_NAV_LINKS.map((link, index) => (
+          <li class="nav-item" style={`--i: ${index}`}>
             <a
               href={withBase(link.href)}
               data-mobile-nav-link
               aria-current={isCurrent(pathname, link.href) ? 'page' : undefined}
               class:list={[
-                'display block py-3 text-headline',
+                /*
+                 * The row is the target rather than the word: the label stays
+                 * on the left edge and the whole width of the panel answers a
+                 * thumb, which is most of what makes the menu work one handed.
+                 */
+                'menu-link display flex items-center text-headline',
                 isCurrent(pathname, link.href) ? 'text-buttercream' : 'text-cream'
               ]}
             >
@@ -58,47 +78,253 @@ const { orderUrl, locationLabel, pathname, theme = 'light' } = Astro.props;
       }
     </ul>
 
-    <div class="rule mt-10 flex flex-col gap-5 pt-8">
+    <!--
+      Everything the menu is for past the pages, under one rule and on the same
+      left edge as the links, so it reads as the end of the column rather than
+      as a second block sat at the bottom of the screen.
+    -->
+    <div class="menu-tail nav-item rule" style={`--i: ${tailIndex}`}>
       <a
         href={orderUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="btn label w-fit bg-cream text-plum hover:bg-buttercream"
+        class="menu-cta btn label w-full bg-cream text-plum hover:bg-buttercream"
       >
         Order Online
         <span class="sr-only">(opens in a new tab)</span>
       </a>
-      <p class="label text-cream/60">{locationLabel}</p>
+
+      <div class="menu-social">
+        <SocialLinks
+          instagramUrl={instagramUrl}
+          facebookUrl={facebookUrl}
+          label={`${businessName} on social media`}
+        />
+      </div>
+
+      <p class="menu-place label text-cream/60">{locationLabel}</p>
     </div>
   </nav>
 </div>
 
+<style>
+  /* The header publishes these and moves them on scroll; the button follows. */
+  .nav-toggle {
+    color: var(--nav-fg);
+    transition: color 200ms ease;
+  }
+
+  .nav-toggle:hover,
+  .nav-toggle:focus-visible {
+    color: var(--nav-accent);
+  }
+
+  /*
+   * Three bars that become the cross rather than being swapped for it: the
+   * outer two travel to the middle and turn, the middle one thins away under
+   * them. The turn runs on the site's easing, so it lands with the panel.
+   */
+  .nav-bars {
+    position: relative;
+    display: block;
+    width: 1.25rem;
+    height: 0.875rem;
+  }
+
+  .nav-bars span {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 1.5px;
+    margin-top: -0.75px;
+    border-radius: 1px;
+    background-color: currentColor;
+    transition:
+      transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 160ms ease;
+  }
+
+  .nav-bars span:nth-child(1) {
+    transform: translateY(-6px);
+  }
+
+  .nav-bars span:nth-child(3) {
+    transform: translateY(6px);
+  }
+
+  .nav-toggle[aria-expanded='true'] .nav-bars span:nth-child(1) {
+    transform: rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded='true'] .nav-bars span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0.2);
+  }
+
+  .nav-toggle[aria-expanded='true'] .nav-bars span:nth-child(3) {
+    transform: rotate(-45deg);
+  }
+
+  /*
+   * The panel is clipped rather than moved, so it appears to come out from
+   * under the bar instead of sliding across it. Its top is measured when it
+   * opens, since the announcement bar above the header may still be in view.
+   */
+  .mobile-nav {
+    position: fixed;
+    inset: var(--panel-top, 0px) 0 0 0;
+    z-index: 40;
+    clip-path: inset(0 0 100% 0);
+    pointer-events: none;
+    transition: clip-path 460ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .mobile-nav.is-open {
+    clip-path: inset(0 0 0 0);
+    pointer-events: auto;
+  }
+
+  /*
+   * The menu reads down from the bar rather than sitting in the middle of what
+   * is left: the pages start just under the top row, and the block below the
+   * rule follows them instead of being pushed to the floor.
+   */
+  .menu-body {
+    padding-top: 1rem;
+    padding-bottom: 2.5rem;
+  }
+
+  /*
+   * A row a thumb cannot miss, held a little under the height the padding
+   * alone was giving it, so six of them read as a tighter column.
+   */
+  .menu-link {
+    min-height: 2.75rem;
+  }
+
+  .menu-tail {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  /*
+   * The site's button across the same width the links run, set by the box's
+   * own value rather than by a second set of padding. The floor is what keeps
+   * it at a comfortable height whatever the label measures.
+   */
+  .menu-cta {
+    --btn-py: 1.25rem;
+
+    min-height: 3.25rem;
+    margin-bottom: 0.875rem;
+  }
+
+  /* The pair carries its own tap padding, so only the margin past it shows. */
+  .menu-social {
+    margin-bottom: 0.375rem;
+  }
+
+  /*
+   * The links arrive behind the edge as it passes them. Only the delay is
+   * staggered, so on the way out they leave together and the panel is gone in
+   * one movement rather than unwinding item by item.
+   */
+  .nav-item {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    transition:
+      opacity 300ms ease,
+      transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .mobile-nav.is-open .nav-item {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(110ms + var(--i, 0) * 55ms);
+  }
+
+  /* Durations are cut to nothing site-wide; the waiting has to go with them. */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-nav.is-open .nav-item {
+      transition-delay: 0ms;
+    }
+  }
+</style>
+
 <script>
   const toggle = document.getElementById('mobile-nav-toggle');
   const panel = document.getElementById('mobile-nav');
-  const close = document.getElementById('mobile-nav-close');
 
-  if (toggle && panel && close) {
+  if (toggle && panel) {
+    const bar = toggle.closest('header');
     const links = panel.querySelectorAll<HTMLAnchorElement>('[data-mobile-nav-link]');
+    /* The panel covers these rather than replacing them, so they are held out
+       of reach while it is open instead of being tabbed into behind it. */
+    const behind = [document.getElementById('main'), document.querySelector('footer')];
+
+    /* Long enough for the clip to close before the panel is taken out of flow. */
+    const EXIT_MS = 500;
+    let hideTimer = 0;
+
+    /*
+     * The header is sticky, so where it ends depends on whether the
+     * announcement bar above it is still on screen.
+     */
+    const position = () =>
+      panel.style.setProperty(
+        '--panel-top',
+        `${Math.max(0, Math.round(bar?.getBoundingClientRect().bottom ?? 0))}px`
+      );
+
+    /*
+     * The bar shortens as the panel opens, so the panel's top follows it down
+     * rather than being measured once before the move starts.
+     */
+    if (bar) {
+      new ResizeObserver(() => {
+        if (!panel.hidden) {
+          position();
+        }
+      }).observe(bar);
+    }
 
     const setOpen = (open: boolean) => {
-      panel.hidden = !open;
+      window.clearTimeout(hideTimer);
       toggle.setAttribute('aria-expanded', String(open));
+      /* The bar reads as the menu's top row while this is set. */
+      bar?.classList.toggle('nav-open', open);
       document.documentElement.style.overflow = open ? 'hidden' : '';
+      behind.forEach((region) => region?.toggleAttribute('inert', open));
+
       if (open) {
-        (links[0] ?? close).focus();
+        position();
+        panel.hidden = false;
+        /* A frame on screen closed, so the browser has a state to move from. */
+        requestAnimationFrame(() => panel.classList.add('is-open'));
+        (links[0] ?? toggle).focus();
       } else {
+        panel.classList.remove('is-open');
+        hideTimer = window.setTimeout(() => {
+          panel.hidden = true;
+        }, EXIT_MS);
         toggle.focus();
       }
     };
 
     toggle.addEventListener('click', () => setOpen(panel.hidden === true));
-    close.addEventListener('click', () => setOpen(false));
     links.forEach((link) => link.addEventListener('click', () => setOpen(false)));
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && !panel.hidden) {
         setOpen(false);
+      }
+    });
+
+    /* An address bar sliding away moves the header under the open panel. */
+    window.addEventListener('resize', () => {
+      if (!panel.hidden) {
+        position();
       }
     });
 

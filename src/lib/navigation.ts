@@ -19,6 +19,15 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 /*
+ * The logo is the way home wherever the header is a row, so home is only ever
+ * named on the phone, where the logo opens nothing and the menu is the page
+ * list in full.
+ */
+export const HOME_LINK: NavLink = { href: '/', label: 'Home' };
+
+export const MOBILE_NAV_LINKS: NavLink[] = [HOME_LINK, ...NAV_LINKS];
+
+/*
  * The header sets the same links either side of the centred logo, so it needs
  * them in two groups rather than one list. Labels stay single sourced above.
  */
