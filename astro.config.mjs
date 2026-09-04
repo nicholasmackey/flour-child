@@ -32,11 +32,23 @@ if (!projectId || !dataset) {
 
 // Canonical URLs, OpenGraph tags, the sitemap and robots.txt are all built from
 // this. Set PUBLIC_SITE_URL to the real domain before deploying.
-const site = process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+const siteUrl = new URL(process.env.PUBLIC_SITE_URL || 'http://localhost:4321');
+
+/*
+ * GitHub Pages serves this repository as a project site, so the whole site sits
+ * under a sub-path rather than at the root of the domain. Astro wants those as
+ * two values: `site` is the origin alone and `base` the sub-path beneath it, and
+ * it joins them wherever it builds a URL. Together they are PUBLIC_SITE_URL:
+ * https://nicholasmackey.github.io + /flour-child. Moving to a custom domain
+ * means dropping `base` as well as changing PUBLIC_SITE_URL.
+ */
+const site = siteUrl.origin;
+const base = '/flour-child';
 
 // https://astro.build/config
 export default defineConfig({
   site,
+  base,
 
   vite: {
     plugins: [tailwindcss()]

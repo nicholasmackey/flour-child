@@ -8,6 +8,7 @@ import DisplayHeading from '../components/DisplayHeading.astro';
 import PortableText from '../components/PortableText.astro';
 import SmartImage from '../components/SmartImage.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/paths';
 import { hasImage } from '../sanity/image';
 import { getAboutPage, getSiteSettings } from '../sanity/queries';
 
@@ -100,7 +101,7 @@ const supportingShapes = ['3 / 4', '1 / 1', '4 / 5'];
               Everything is baked here in {settings.locationLabel}, in batches small enough to keep an eye on.
             </p>
             <p class="mt-8">
-              <a href="/find-us" class="quiet-link label text-plum">Where to find it</a>
+              <a href={withBase('/find-us')} class="quiet-link label text-plum">Where to find it</a>
             </p>
           </div>
         </div>

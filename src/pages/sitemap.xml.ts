@@ -4,14 +4,15 @@
 
 import type { APIRoute } from 'astro';
 
+import { absoluteUrl } from '../lib/paths';
+
 const ROUTES = ['/', '/menu', '/about-us', '/find-us', '/gallery', '/contact'];
 
 export const GET: APIRoute = ({ site }) => {
-  const base = site ?? new URL('http://localhost:4321');
   const lastModified = new Date().toISOString().slice(0, 10);
 
   const urls = ROUTES.map((route) => {
-    const location = new URL(route, base).href;
+    const location = absoluteUrl(route, site);
     return `  <url>\n    <loc>${location}</loc>\n    <lastmod>${lastModified}</lastmod>\n  </url>`;
   }).join('\n');
 

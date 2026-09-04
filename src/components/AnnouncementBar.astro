@@ -3,6 +3,7 @@
  * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
  */
 
+import { withBase } from '../lib/paths';
 import type { Announcement } from '../sanity/types';
 
 interface Props {
@@ -38,7 +39,7 @@ const isExternal = /^https?:\/\//.test(announcement.linkUrl ?? '');
     {
       hasLink && (
         <a
-          href={announcement.linkUrl}
+          href={withBase(announcement.linkUrl ?? '')}
           class="quiet-link label"
           {...isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {}}
         >

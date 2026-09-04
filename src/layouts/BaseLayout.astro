@@ -7,6 +7,7 @@ import AnnouncementBar from '../components/AnnouncementBar.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import Seo from '../components/Seo.astro';
+import { withBase } from '../lib/paths';
 import { getActiveAnnouncement, getSiteSettings } from '../sanity/queries';
 
 import '../styles/global.css';
@@ -54,8 +55,8 @@ const preloadFonts = ['hamburg-hand-bold', 'acumin-pro-regular']
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#fff9f3" />
 
-    <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" href={withBase('/favicon.png')} type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
 
     {preloadFonts.map((url) => <link rel="preload" href={url} as="font" type="font/woff2" crossorigin />)}
 

@@ -3,6 +3,8 @@
  * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
  */
 
+import { withBase } from '../lib/paths';
+
 interface Props {
   href: string;
   variant?: 'solid' | 'outline' | 'onDark' | 'text';
@@ -34,7 +36,7 @@ const variants = {
 ---
 
 <a
-  href={href}
+  href={withBase(href)}
   class:list={['label', shapes[variant], variants[variant], className]}
   {...isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {}}
 >

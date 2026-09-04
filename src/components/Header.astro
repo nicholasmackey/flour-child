@@ -4,6 +4,7 @@
  */
 
 import { HEADER_LEFT_LINKS, HEADER_RIGHT_LINKS, isCurrent } from '../lib/navigation';
+import { withBase } from '../lib/paths';
 
 import Logo from './Logo.astro';
 import MobileNavigation from './MobileNavigation.astro';
@@ -57,7 +58,7 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
           HEADER_LEFT_LINKS.map((item) => (
             <li>
               <a
-                href={item.href}
+                href={withBase(item.href)}
                 aria-current={isCurrent(pathname, item.href) ? 'page' : undefined}
                 class:list={linkClass(item.href)}
               >
@@ -76,7 +77,7 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
       />
     </div>
 
-    <a href="/" class="justify-self-center" aria-label="Flour Child NTX home">
+    <a href={withBase('/')} class="justify-self-center" aria-label="Flour Child NTX home">
       <Logo variant="wordmark" color={onPlum ? 'white' : 'plum'} alt="Flour Child NTX" class="site-logo" />
     </a>
 
@@ -86,7 +87,7 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
           HEADER_RIGHT_LINKS.map((item) => (
             <li>
               <a
-                href={item.href}
+                href={withBase(item.href)}
                 aria-current={isCurrent(pathname, item.href) ? 'page' : undefined}
                 class:list={linkClass(item.href)}
               >

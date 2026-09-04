@@ -8,6 +8,7 @@ import { Image } from 'astro:assets';
 import ButtonLink from '../components/ButtonLink.astro';
 import DisplayHeading from '../components/DisplayHeading.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { absoluteUrl } from '../lib/paths';
 import { getHomePage, getSiteSettings } from '../sanity/queries';
 
 import cinnamonRoll from '../assets/images/hero/cinnamon-roll.png';
@@ -46,8 +47,8 @@ const structuredData = {
   '@type':     'Bakery',
   name:        settings.businessName,
   description: settings.defaultSeoDescription,
-  url:         Astro.site?.href,
-  image:       new URL('/brand/flour-child-share.png', Astro.site).href,
+  url:         absoluteUrl('/', Astro.site),
+  image:       absoluteUrl('/brand/flour-child-share.png', Astro.site),
   address: {
     '@type':         'PostalAddress',
     addressLocality: city,

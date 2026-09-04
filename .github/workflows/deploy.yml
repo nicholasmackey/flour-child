@@ -37,6 +37,11 @@ jobs:
 
       - name: Build
         run: pnpm build
+        env:
+          # Public identifiers, not secrets: the same values sit in .env.example.
+          PUBLIC_SANITY_PROJECT_ID: 491tvf4i
+          PUBLIC_SANITY_DATASET: production
+          PUBLIC_SITE_URL: https://nicholasmackey.github.io/flour-child
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

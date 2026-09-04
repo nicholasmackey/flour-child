@@ -4,6 +4,7 @@
 
 import type { PortableTextBlock, PortableTextSpan } from '../sanity/types';
 
+import { withBase } from './paths';
 import { escapeHtml } from './text';
 
 /*
@@ -38,7 +39,7 @@ function renderSpan(span: PortableTextSpan, markDefs: MarkDef[]): string {
     if (definition?.href && isSafeHref(definition.href)) {
       const external = /^https?:\/\//i.test(definition.href);
       const attributes = external ? ' target="_blank" rel="noopener noreferrer"' : '';
-      html = `<a href="${escapeHtml(definition.href)}"${attributes}>${html}</a>`;
+      html = `<a href="${escapeHtml(withBase(definition.href))}"${attributes}>${html}</a>`;
     }
   }
 

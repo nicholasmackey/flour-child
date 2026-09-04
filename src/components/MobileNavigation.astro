@@ -4,6 +4,7 @@
  */
 
 import { NAV_LINKS, isCurrent } from '../lib/navigation';
+import { withBase } from '../lib/paths';
 
 import Logo from './Logo.astro';
 
@@ -30,7 +31,7 @@ const { orderUrl, locationLabel, pathname, theme = 'light' } = Astro.props;
 
 <div id="mobile-nav" class="on-dark fixed inset-0 z-50 flex flex-col bg-plum lg:hidden" hidden>
   <div class="gutter-x flex items-center justify-between py-6">
-    <a href="/" data-mobile-nav-link aria-label="Flour Child NTX home">
+    <a href={withBase('/')} data-mobile-nav-link aria-label="Flour Child NTX home">
       <Logo variant="wordmark" color="white" alt="Flour Child NTX" class="w-28" />
     </a>
     <button type="button" id="mobile-nav-close" class="label text-cream">Close</button>
@@ -42,7 +43,7 @@ const { orderUrl, locationLabel, pathname, theme = 'light' } = Astro.props;
         NAV_LINKS.map((link) => (
           <li>
             <a
-              href={link.href}
+              href={withBase(link.href)}
               data-mobile-nav-link
               aria-current={isCurrent(pathname, link.href) ? 'page' : undefined}
               class:list={[

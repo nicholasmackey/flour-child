@@ -2,6 +2,8 @@
  * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
  */
 
+import { stripBase } from './paths';
+
 export interface NavLink {
   href: string;
   label: string;
@@ -33,6 +35,5 @@ export const HEADER_LEFT_LINKS: NavLink[] = ['/menu', '/gallery', '/about-us'].m
 export const HEADER_RIGHT_LINKS: NavLink[] = ['/find-us', '/contact'].map(link);
 
 export function isCurrent(pathname: string, href: string): boolean {
-  const current = pathname.replace(/\/+$/, '') || '/';
-  return current === href;
+  return stripBase(pathname) === href;
 }

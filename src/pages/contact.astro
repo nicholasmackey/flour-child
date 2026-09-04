@@ -6,6 +6,7 @@
 import ButtonLink from '../components/ButtonLink.astro';
 import SmartImage from '../components/SmartImage.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/paths';
 import { getLocations, getSiteSettings } from '../sanity/queries';
 
 import kitchenPortrait from '../assets/images/story/hailey-kitchen-portrait.webp';
@@ -78,7 +79,7 @@ const orderingDetails = [
           )
         }
         <p class="mt-6">
-          <a href="/find-us" class="quiet-link label text-pink-deep">Every pickup spot</a>
+          <a href={withBase('/find-us')} class="quiet-link label text-pink-deep">Every pickup spot</a>
         </p>
       </div>
 

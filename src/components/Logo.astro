@@ -3,6 +3,8 @@
  * Copyright (c) 2026 CalAmp Corp.  All Rights Reserved
  */
 
+import { withBase } from '../lib/paths';
+
 interface Props {
   /** `primary` is the full lockup with BAKED GOODS, `wordmark` is the script alone. */
   variant?: 'primary' | 'wordmark';
@@ -27,7 +29,7 @@ const logo = files[`${variant}-${color}` as keyof typeof files];
 ---
 
 <img
-  src={logo.src}
+  src={withBase(logo.src)}
   width={logo.width}
   height={logo.height}
   alt={alt}
