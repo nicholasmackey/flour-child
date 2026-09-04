@@ -9,6 +9,7 @@ import ButtonLink from '../components/ButtonLink.astro';
 import DisplayHeading from '../components/DisplayHeading.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { absoluteUrl } from '../lib/paths';
+import { keepHyphenatedWordsWhole } from '../lib/text';
 import { getHomePage, getSiteSettings } from '../sanity/queries';
 
 import cinnamonRoll from '../assets/images/hero/cinnamon-roll.png';
@@ -39,6 +40,65 @@ const BAND_PHRASES = [
 ];
 
 const BAND_RUN = [...BAND_PHRASES, ...BAND_PHRASES, ...BAND_PHRASES];
+
+/*
+ * What the link at the top of the page promises an answer to. Questions are
+ * written in sentence case and set as capitals, the way every other piece of
+ * display type on the site is, and answers are held to two or three sentences:
+ * enough to settle the question without turning the foot of the page into
+ * another one. Where the answer has an obvious next move, it carries the link
+ * that makes it, so nobody has to go back up to the navigation to act on what
+ * they just read.
+ */
+interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+}
+
+const FAQS: Faq[] = [
+  {
+    id:       'order',
+    question: 'How do I order?',
+    answer:
+      "Check the current menu and place your order online. Availability changes from week to " +
+      "week, so the online menu is the best place to see what's being baked right now.",
+    ctaHref:  '/menu',
+    ctaLabel: "See This Week's Menu"
+  },
+  {
+    id:       'pickup',
+    question: 'Where do I pick up?',
+    answer:
+      'Porch pickup is available in Forney, Texas. Flour Child is also available at select ' +
+      'shops and markets around North Texas, with locations and delivery days varying by location.',
+    ctaHref:  '/find-us',
+    ctaLabel: 'Find Pickup Locations'
+  },
+  {
+    id:       'notice',
+    question: 'How much notice do you need?',
+    answer:
+      "Most orders need about 3 days of lead time. Availability may vary depending on the week " +
+      "and what's being baked."
+  },
+  {
+    id:       'gluten',
+    question: 'Is everything gluten-free?',
+    answer:
+      'Yes. Flour Child specializes in gluten-free baking, including bread, cinnamon rolls, ' +
+      'cookies, kolache, and rotating weekly favorites.'
+  },
+  {
+    id:       'preorder',
+    question: 'Can I preorder from every location?',
+    answer:
+      'Not always. Some retail locations have their own availability and preorder rules. Check ' +
+      'the Find Us page for current details before heading out.'
+  }
+];
 
 const [city, region] = settings.locationLabel.split(',').map((part) => part.trim());
 
@@ -135,6 +195,84 @@ const structuredData = {
     <div class="intro-band" aria-hidden="true">
       <div class="intro-track">
         {BAND_RUN.map((phrase) => <span class="intro-phrase display">{phrase}</span>)}
+      </div>
+    </div>
+  </section>
+
+  <!--
+    The answers, and where the "how does it work?" link at the top of the page
+    lands. The band above hands over to it, so the section opens on cream again
+    and closes the page against the plum footer.
+
+    Laid out as the rest of the site is: the heading holds the left of the
+    twelve columns and the questions run down the right of them, which keeps the
+    rows off the full width of the page and the answers at a reading measure
+    without anything having to be boxed. One rule between each question is the
+    whole of the furniture.
+  -->
+  <section id="how-it-works" class="faq">
+    <div class="canvas gutter-x faq-grid">
+      <div class="faq-intro">
+        <h2 class="faq-heading display">How does it work?</h2>
+        <p class="faq-lead">
+          Everything changes a little from week to week, but ordering Flour Child is simple.
+        </p>
+      </div>
+
+      <div class="faq-list" data-faq>
+        {
+          FAQS.map((faq, index) => (
+            <div class:list={['faq-item', index === 0 && 'is-open']}>
+              <h3 class="faq-question">
+                <button
+                  type="button"
+                  id={`faq-${faq.id}-question`}
+                  class="faq-trigger"
+                  aria-expanded={index === 0 ? 'true' : 'false'}
+                  aria-controls={`faq-${faq.id}-answer`}
+                  data-faq-trigger
+                >
+                  <span class="faq-label display" set:html={keepHyphenatedWordsWhole(faq.question)} />
+
+                  <span class="faq-icon" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 18 18"
+                      width="18"
+                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.25"
+                      stroke-linecap="round"
+                      focusable="false"
+                    >
+                      <path d="M9 2.5v13" />
+                      <path class="faq-icon-bar" d="M2.5 9h13" />
+                    </svg>
+                  </span>
+                </button>
+              </h3>
+
+              <div
+                id={`faq-${faq.id}-answer`}
+                class="faq-panel"
+                role="region"
+                aria-labelledby={`faq-${faq.id}-question`}
+              >
+                <div class="faq-panel-inner">
+                  <p class="faq-answer">{faq.answer}</p>
+
+                  {faq.ctaHref && faq.ctaLabel && (
+                    <p class="faq-cta">
+                      <ButtonLink href={faq.ctaHref} variant="text">
+                        {faq.ctaLabel}
+                      </ButtonLink>
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        }
       </div>
     </div>
   </section>
@@ -306,6 +444,72 @@ const structuredData = {
     calm.addEventListener('change', sync);
     fine.addEventListener('change', sync);
     sync();
+  }
+</script>
+
+<script>
+  /*
+   * The answers. One at a time: opening a question closes whatever was open,
+   * which keeps the list scannable and stops the foot of the page growing by
+   * the height of five answers at once.
+   *
+   * Everything the eye sees hangs off `is-open` in the stylesheet, so all this
+   * does is move that class and keep `aria-expanded` in step with it. The first
+   * question is rendered open, so arriving from the link at the top of the page
+   * lands on an answer rather than on five closed rows.
+   */
+  const faq = document.querySelector<HTMLElement>('[data-faq]');
+
+  if (faq) {
+    const triggers = Array.from(faq.querySelectorAll<HTMLButtonElement>('[data-faq-trigger]'));
+
+    const setOpen = (trigger: HTMLButtonElement, open: boolean) => {
+      trigger.setAttribute('aria-expanded', String(open));
+      trigger.closest('.faq-item')?.classList.toggle('is-open', open);
+    };
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener('click', () => {
+        const opening = trigger.getAttribute('aria-expanded') !== 'true';
+        triggers.forEach((other) => setOpen(other, other === trigger && opening));
+      });
+    });
+
+    /*
+     * The arrow keys walk the questions and wrap at either end, which is what
+     * anyone told they are on an accordion expects of it. Enter and space are
+     * the buttons' own, and tab still leaves the list rather than cycling it.
+     */
+    faq.addEventListener('keydown', (event) => {
+      const from = triggers.indexOf(document.activeElement as HTMLButtonElement);
+
+      if (from < 0) {
+        return;
+      }
+
+      const last = triggers.length - 1;
+      let to: number;
+
+      switch (event.key) {
+        case 'ArrowDown':
+          to = from === last ? 0 : from + 1;
+          break;
+        case 'ArrowUp':
+          to = from === 0 ? last : from - 1;
+          break;
+        case 'Home':
+          to = 0;
+          break;
+        case 'End':
+          to = last;
+          break;
+        default:
+          return;
+      }
+
+      event.preventDefault();
+      triggers[to].focus();
+    });
   }
 </script>
 
@@ -555,6 +759,210 @@ const structuredData = {
   @media (prefers-reduced-motion: reduce) {
     .intro-track {
       animation: none;
+    }
+  }
+
+  /*
+   * The answers. Cream again after the band, and nothing on it but type and
+   * rules: no panel, no card, no second colour. The section's own padding is
+   * what holds it apart from the band above and the footer under it.
+   */
+  .faq {
+    background-color: var(--color-cream);
+    padding-top: clamp(3rem, 5.5vw, 6rem);
+    padding-bottom: clamp(3.25rem, 6vw, 6.75rem);
+  }
+
+  /* Under the statement in the section above it: this heads a part, not the page. */
+  .faq-heading {
+    font-size: clamp(1.5rem, 5.6vw, 2.15rem);
+    line-height: 0.96;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .faq-lead {
+    max-width: 30rem;
+    margin-top: clamp(0.7rem, 1.4vw, 1.1rem);
+    color: color-mix(in srgb, var(--color-plum) 75%, transparent);
+    font-size: clamp(1rem, 1.15vw, 1.1rem);
+    line-height: 1.5;
+  }
+
+  /*
+   * A rule under the last question as well as over the first, so the set is
+   * closed rather than trailing off into the padding.
+   */
+  .faq-list {
+    margin-top: clamp(1.6rem, 4vw, 2.5rem);
+    border-top: 1px solid color-mix(in srgb, var(--color-plum) 20%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-plum) 20%, transparent);
+  }
+
+  .faq-item + .faq-item {
+    border-top: 1px solid color-mix(in srgb, var(--color-plum) 20%, transparent);
+  }
+
+  /*
+   * The whole row is the control, so the target is the width of the column and
+   * the height of the question however many lines it takes.
+   */
+  .faq-trigger {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    padding-block: clamp(1.05rem, 1.9vw, 1.4rem);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .faq-label {
+    font-size: var(--text-title);
+    line-height: 1.08;
+    text-transform: uppercase;
+    text-wrap: balance;
+    transition: color 200ms ease;
+  }
+
+  .faq-icon {
+    display: flex;
+    flex: none;
+    color: color-mix(in srgb, var(--color-plum) 50%, transparent);
+    transition:
+      color 200ms ease,
+      transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  .faq-icon-bar {
+    transition: opacity 200ms ease;
+  }
+
+  .faq-trigger:hover .faq-label,
+  .faq-trigger:focus-visible .faq-label,
+  .faq-trigger:hover .faq-icon,
+  .faq-trigger:focus-visible .faq-icon {
+    color: var(--color-pink-deep);
+  }
+
+  /*
+   * A quarter turn, and the bar it started with goes on the way round: what is
+   * left standing is the upright, laid flat. The plus becomes the minus without
+   * either stroke being swapped for another.
+   */
+  .faq-item.is-open .faq-icon {
+    transform: rotate(90deg);
+    color: var(--color-plum);
+  }
+
+  .faq-item.is-open .faq-icon-bar {
+    opacity: 0;
+  }
+
+  /*
+   * Open and closed are a grid row rather than a measured pixel height, so an
+   * answer can be whatever length it is and the move still has two numbers to
+   * run between. Nothing here has to be read back out of the layout first.
+   */
+  .faq-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  .faq-item.is-open .faq-panel {
+    grid-template-rows: 1fr;
+  }
+
+  /*
+   * The clip that makes that work would also cut the focus ring off the link
+   * inside, so the inline padding carries the ring's offset and the margin puts
+   * the content back on the column. Closed, visibility takes the answer out of
+   * the tab order and off the screen reader; it waits for the height to finish,
+   * so nothing vanishes halfway through the move.
+   *
+   * Nothing pads the block axis here: boxes are measured border to border, so a
+   * padding-bottom would be a floor the closed row could never get under, and
+   * every shut question would carry an empty band beneath it. The space under
+   * the answer is the last paragraph's margin instead, which is inside the clip
+   * and goes when the row does.
+   */
+  .faq-panel-inner {
+    overflow: hidden;
+    min-height: 0;
+    margin-inline: -0.375rem;
+    padding-inline: 0.375rem;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 180ms ease,
+      visibility 0s linear 260ms;
+  }
+
+  .faq-panel-inner > p:last-child {
+    margin-bottom: clamp(1.35rem, 2.2vw, 1.85rem);
+  }
+
+  .faq-item.is-open .faq-panel-inner {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 240ms ease 60ms,
+      visibility 0s;
+  }
+
+  .faq-answer {
+    max-width: 34rem;
+    color: color-mix(in srgb, var(--color-plum) 82%, transparent);
+    font-size: clamp(1rem, 1.2vw, 1.1rem);
+    line-height: 1.55;
+  }
+
+  /* Far enough under the answer to read as the next step, not as a footnote. */
+  .faq-cta {
+    margin-top: clamp(1.1rem, 1.8vw, 1.5rem);
+  }
+
+  /*
+   * The site's twelve columns: the heading takes the left of them and the
+   * questions the right, which keeps the rows off the full width of the page
+   * and the answers at a reading measure without boxing anything.
+   */
+  @media (min-width: 1024px) {
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 0 2rem;
+    }
+
+    .faq-intro {
+      grid-column: 1 / span 4;
+    }
+
+    .faq-list {
+      grid-column: 6 / span 7;
+      margin-top: 0;
+    }
+
+    .faq-heading {
+      font-size: min(3.4vw, 3rem);
+    }
+  }
+
+  /*
+   * Durations are cut to nothing site-wide, and the wait on the answer's
+   * visibility has to go with them or it would hang on screen after the row
+   * has already closed.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .faq-panel,
+    .faq-panel-inner,
+    .faq-item.is-open .faq-panel-inner,
+    .faq-icon,
+    .faq-icon-bar {
+      transition: none;
     }
   }
 </style>
