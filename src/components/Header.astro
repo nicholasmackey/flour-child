@@ -8,16 +8,28 @@ import { withBase } from '../lib/paths';
 
 import Logo from './Logo.astro';
 import MobileNavigation from './MobileNavigation.astro';
+import SocialLinks from './SocialLinks.astro';
 
 interface Props {
   orderUrl: string;
   locationLabel: string;
   pathname: string;
+  businessName: string;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
   /** `dark` sits the header on the plum hero, `light` on the cream pages. */
   theme?: 'light' | 'dark';
 }
 
-const { orderUrl, locationLabel, pathname, theme = 'light' } = Astro.props;
+const {
+  orderUrl,
+  locationLabel,
+  pathname,
+  businessName,
+  instagramUrl,
+  facebookUrl,
+  theme = 'light'
+} = Astro.props;
 
 const onPlum = theme === 'dark';
 
@@ -42,7 +54,9 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
   scrolls beneath it. At rest it still reads as part of the page rather than a
   bar on top of it, so the edge only appears once something is passing under it.
   The row is a three column grid, so the logo is centred on the viewport rather
-  than on whatever width the two link groups happen to take up.
+  than on whatever width the two link groups happen to take up. Narrow, the two
+  groups fall away and the outer cells carry what a phone needs instead: the
+  social pair on one side of the logo, the way into the menu on the other.
 -->
 <header
   data-site-header
@@ -52,7 +66,7 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
     aria-label="Main"
     class="nav-row canvas gutter-x grid grid-cols-[1fr_auto_1fr] items-center py-6 md:py-7"
   >
-    <div class:list={[cell, 'justify-self-start lg:justify-self-end']}>
+    <div class:list={[cell, 'nav-lead', 'justify-self-start lg:justify-self-end']}>
       <ul class:list={[cell, 'hidden lg:flex']}>
         {
           HEADER_LEFT_LINKS.map((item) => (
@@ -69,11 +83,12 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
         }
       </ul>
 
-      <MobileNavigation
-        orderUrl={orderUrl}
-        locationLabel={locationLabel}
-        pathname={pathname}
-        theme={theme}
+      <SocialLinks
+        instagramUrl={instagramUrl}
+        facebookUrl={facebookUrl}
+        label={`${businessName} on social media`}
+        tone="nav"
+        class="lg:hidden"
       />
     </div>
 
@@ -107,6 +122,15 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
         Order Online
         <span class="sr-only">(opens in a new tab)</span>
       </a>
+
+      <MobileNavigation
+        orderUrl={orderUrl}
+        locationLabel={locationLabel}
+        pathname={pathname}
+        businessName={businessName}
+        instagramUrl={instagramUrl}
+        facebookUrl={facebookUrl}
+      />
     </div>
   </nav>
 </header>
@@ -220,7 +244,7 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
    * is what carries the change: the bar shortens with it.
    */
   .site-header :global(.site-logo) {
-    width: calc(var(--logo-rest) * var(--logo-scale));
+    width: calc(var(--logo-rest) * var(--logo-scale) * var(--logo-menu-scale, 1));
     transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
@@ -235,6 +259,32 @@ const linkClass = (href: string) => ['nav-link label', isCurrent(pathname, href)
 
   .nav-cell {
     gap: var(--nav-gap);
+  }
+
+  /*
+   * With the menu open the bar becomes the menu's own top row and gives way to
+   * it: the pair at the left steps out, the mark comes down about a fifth and
+   * the row closes up, leaving the logo and the way out. Every rule here is
+   * held behind both the phone's width and the open state, so nothing in it
+   * reaches the desktop row.
+   */
+  @media (max-width: 1023.98px) {
+    .site-header.nav-open {
+      --logo-menu-scale: 0.78;
+    }
+
+    .site-header.nav-open .nav-lead {
+      visibility: hidden;
+    }
+
+    /* Closes on the logo's own curve, so the row shortens as one movement. */
+    .nav-row {
+      transition: padding-block 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .site-header.nav-open .nav-row {
+      padding-block: 0.875rem;
+    }
   }
 
   @media (min-width: 640px) {
